@@ -313,7 +313,7 @@ class BridgeService : Service() {
         val note = Notification.Builder(this, channel)
             .setContentTitle("ALRADHY Universal Bridge")
             .setContentText("Local bridge active. Open to approve device pairing.")
-            .setSmallIcon(android.R.drawable.stat_sys_data_bluetooth)
+            .setSmallIcon(android.R.drawable.ic_dialog_info)
             .setContentIntent(intent).build()
         startForeground(1201, note)
         try {
