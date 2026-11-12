@@ -222,6 +222,7 @@ private class RemoteSession(val ssl:TvSocket,val ime:Boolean) {
     @Volatile var fieldCounter=0
     @Volatile var lastInput=System.currentTimeMillis()
     private val latch=CountDownLatch(1)
+    @Volatile private var activeFeatures=0
     private val offered=if(ime) (1 or 2 or 4 or 32 or 64 or 512) else (1 or 2 or 32 or 64 or 512)
     fun start(){
         Thread({
@@ -232,13 +233,14 @@ private class RemoteSession(val ssl:TvSocket,val ime:Boolean) {
                         msg.has(1) -> {
                             val supported=msg.msg(1)?.n(1)?.toInt()?:0
                             val active=supported and offered
+                            activeFeatures=active
                             require(active and 2!=0){"TV remote service doesn't support key commands"}
                             if(ime) require(active and 4!=0){"TV remote service doesn't support native text"}
                             val device=Pb().s(1,"ALRADHY Bridge").s(2,"ALRADHY").n(3,1)
                                 .s(4,"Android").s(5,"com.alradhy.universalbridge.mobile").s(6,"0.2.0")
                             ssl.send(Pb().m(1,Pb().n(1,active).m(2,device)).bytes())
                         }
-                        msg.has(2) -> ssl.send(Pb().m(2,Pb().n(1,offered and (1 or 2 or 4 or 32 or 64 or 512))).bytes())
+                        msg.has(2) -> ssl.send(Pb().m(2,Pb().n(1,activeFeatures)).bytes())
                         msg.has(8) -> ssl.send(Pb().m(9,Pb().n(1,msg.msg(8)?.n(1)?:0)).bytes())
                         msg.has(20) -> {
                             val state=msg.msg(20)
@@ -400,6 +402,17 @@ object AtvWifiRemote {
         return if(live)"Native Wi-Fi text sent; keyboard will restore after inactivity" else
             "Text sent over native Wi-Fi; temporary input session closed"
     }
+    @Synchronized fun edit(op:String,value:String):String {
+        return when(op) {
+          "type" -> text(value,true)
+          "backspace" -> {keyCode(67);"Backspace sent"}
+          "enter" -> {keyCode(66);"Enter sent"}
+          "left" -> {keyCode(21);"Left sent"}
+          "right" -> {keyCode(22);"Right sent"}
+          else -> throw IllegalArgumentException("Invalid edit command")
+        }
+    }
+    @Synchronized private fun keyCode(code:Int){connect();keys?.key(code)?:throw IllegalStateException("TV remote disconnected")}
     @Synchronized fun endInput() {input?.close();input=null}
     @Synchronized fun disconnect() {
         endInput();keys?.close();keys=null;closePair()

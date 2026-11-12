@@ -246,10 +246,11 @@ class BridgeHttpServer(private val app: Context) : NanoHTTPD(PORT) {
                 return reply(Response.Status.OK, okay(
                     "name" to "ALRADHY Universal Bridge",
                     "platform" to if (BuildConfig.FLAVOR == "tv") "Android TV" else "Android",
-                    "version" to "0.1.4",
+                    "version" to "0.2.0",
                     "accessibility" to (BridgeAccessibilityService.instance != null),
                     "imeReady" to BridgeImeService.isReady(),
-                    "root" to BridgeRuntime.rootEnabled
+                    "root" to BridgeRuntime.rootEnabled,
+                    "nativeEnabled" to (BuildConfig.FLAVOR=="mobile")
                 ))
             }
             val obj: JSONObject = if (s.method == Method.POST) {
@@ -277,6 +278,50 @@ class BridgeHttpServer(private val app: Context) : NanoHTTPD(PORT) {
                 return error(Response.Status.UNAUTHORIZED, "Pairing required or session expired")
 
             when (path) {
+                "/api/native/status" -> {
+                    if (BuildConfig.FLAVOR!="mobile") return error(Response.Status.FORBIDDEN,"Use the mobile Bridge host")
+                    reply(Response.Status.OK,okay("native" to AtvWifiRemote.status(),"devices" to AtvWifiRemote.discoveries()))
+                }
+                "/api/native/scan" -> {
+                    if (BuildConfig.FLAVOR!="mobile") return error(Response.Status.FORBIDDEN,"Mobile only")
+                    reply(Response.Status.OK,okay("message" to AtvWifiRemote.scan()))
+                }
+                "/api/native/pair/start" -> {
+                    if (BuildConfig.FLAVOR!="mobile") return error(Response.Status.FORBIDDEN,"Mobile only")
+                    reply(Response.Status.OK,okay("message" to AtvWifiRemote.startPair(obj.optString("ip"))))
+                }
+                "/api/native/pair/finish" -> {
+                    if (BuildConfig.FLAVOR!="mobile") return error(Response.Status.FORBIDDEN,"Mobile only")
+                    reply(Response.Status.OK,okay("message" to AtvWifiRemote.finishPair(obj.optString("code"))))
+                }
+                "/api/native/connect" -> {
+                    if (BuildConfig.FLAVOR!="mobile") return error(Response.Status.FORBIDDEN,"Mobile only")
+                    reply(Response.Status.OK,okay("message" to AtvWifiRemote.connect(obj.optString("ip"))))
+                }
+                "/api/native/disconnect" -> {
+                    if (BuildConfig.FLAVOR!="mobile") return error(Response.Status.FORBIDDEN,"Mobile only")
+                    AtvWifiRemote.disconnect()
+                    reply(Response.Status.OK,okay("disconnected" to true))
+                }
+                "/api/native/key" -> {
+                    if (BuildConfig.FLAVOR!="mobile") return error(Response.Status.FORBIDDEN,"Mobile only")
+                    reply(Response.Status.OK,okay("result" to AtvWifiRemote.key(obj.optString("key"))))
+                }
+                "/api/native/text" -> {
+                    if (BuildConfig.FLAVOR!="mobile") return error(Response.Status.FORBIDDEN,"Mobile only")
+                    reply(Response.Status.OK,okay("result" to AtvWifiRemote.text(obj.optString("text"),false),"delivery" to "native_sent"))
+                }
+                "/api/native/live" -> {
+                    if (BuildConfig.FLAVOR!="mobile") return error(Response.Status.FORBIDDEN,"Mobile only")
+                    val text=obj.optString("text","")
+                    if(text.length>256)return error(Response.Status.BAD_REQUEST,"Live chunk too large")
+                    reply(Response.Status.OK,okay("result" to AtvWifiRemote.edit(obj.optString("op"),text),"delivery" to "native_sent"))
+                }
+                "/api/native/direct/end" -> {
+                    if (BuildConfig.FLAVOR!="mobile") return error(Response.Status.FORBIDDEN,"Mobile only")
+                    AtvWifiRemote.endInput()
+                    reply(Response.Status.OK,okay("closed" to true))
+                }
                 "/api/state" -> {
                     if (s.method != Method.GET) return error(Response.Status.BAD_REQUEST, "GET expected")
                     val devices = JSONArray()
@@ -305,8 +350,7 @@ class BridgeHttpServer(private val app: Context) : NanoHTTPD(PORT) {
                     val text = obj.optString("text", "")
                     if (text.isEmpty() || text.length > 12000)
                         return error(Response.Status.BAD_REQUEST, "Text must be 1-12000 chars")
-                    val direct = if (BridgeImeService.isReady()) BridgeImeService.remoteEdit("type", text)
-                                 else Pair(false, "IME not ready")
+                    val direct = Pair(false, "Bridge IME disabled")
                     if (direct.first) {
                         reply(Response.Status.OK, okay(
                             "delivery" to "ime",
@@ -362,6 +406,7 @@ class BridgeService : Service() {
     override fun onBind(intent: Intent?): IBinder? = null
     override fun onCreate() {
         super.onCreate()
+        if(BuildConfig.FLAVOR=="mobile")AtvWifiRemote.init(applicationContext)
         val channel = "bridge_session"
         val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         if (Build.VERSION.SDK_INT >= 26) {
@@ -516,6 +561,7 @@ class MainActivity : Activity() {
                         (if (BridgeImeService.isReady()) "Ready ✓" else "Not active (choose Bridge Keyboard & focus a text field)") else "")
             }
             checkPending()
+            if(BuildConfig.FLAVOR=="mobile")AtvWifiRemote.tick()
             handler.postDelayed(this, 1500)
         }
     }
@@ -540,6 +586,7 @@ class MainActivity : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if(BuildConfig.FLAVOR=="mobile")AtvWifiRemote.init(applicationContext)
         BridgeRuntime.rootEnabled = BuildConfig.FLAVOR == "tv" &&
             getSharedPreferences("bridge", MODE_PRIVATE).getBoolean("root", false)
         window.decorView.setBackgroundColor(Color.rgb(8, 11, 18))
@@ -551,7 +598,7 @@ class MainActivity : Activity() {
         scroller.addView(container)
         setContentView(scroller)
         container.addView(label("ALRADHY\nUNIVERSAL BRIDGE", 28f))
-        container.addView(label("Local-first • Trusted Wi-Fi only • v0.1.4", 14f))
+        container.addView(label("Local-first • Trusted Wi-Fi only • v0.2.0", 14f))
         statusText = label("")
         container.addView(statusText)
         container.addView(label("Security: This prototype uses unencrypted local HTTP. Never share passwords or sensitive text.", 13f))
@@ -581,15 +628,50 @@ class MainActivity : Activity() {
                 openController("http://" + ip + ":" + PORT)
             }
         }
+        if (BuildConfig.FLAVOR=="mobile") {
+            container.addView(label("📡 Android TV Remote v2 over Wi-Fi · No Root or TV keyboard installation", 19f))
+            container.addView(label("Pair with the built-in Android TV Remote Service on TV. ALRADHY-KB stays installed and your default.", 14f))
+            val nativeIp=EditText(this).apply {
+                hint="TV IPv4 address (e.g. 192.168.1.20)"
+                setSingleLine(true)
+                setText(AtvWifiRemote.host)
+                setTextColor(Color.WHITE)
+                setHintTextColor(Color.LTGRAY)
+            }
+            val nativeCode=EditText(this).apply {
+                hint="6-digit hexadecimal pairing code shown on TV"
+                setSingleLine(true)
+                setTextColor(Color.WHITE)
+                setHintTextColor(Color.LTGRAY)
+            }
+            container.addView(nativeIp)
+            button("1 · Start Wi-Fi pairing") {
+                Thread {
+                    val msg=runCatching{AtvWifiRemote.startPair(nativeIp.text.toString())}.fold({it},{it.message?:"Pairing error"})
+                    runOnUiThread{Toast.makeText(this,msg,Toast.LENGTH_LONG).show()}
+                }.start()
+            }
+            container.addView(nativeCode)
+            button("2 · Confirm TV pairing code") {
+                Thread {
+                    val msg=runCatching{AtvWifiRemote.finishPair(nativeCode.text.toString())}.fold({it},{it.message?:"Code error"})
+                    runOnUiThread{Toast.makeText(this,msg,Toast.LENGTH_LONG).show()}
+                }.start()
+            }
+            button("3 · Connect TV over Wi-Fi") {
+                Thread {
+                    val msg=runCatching{AtvWifiRemote.connect(nativeIp.text.toString())}.fold({it},{it.message?:"TV connection failed"})
+                    runOnUiThread{Toast.makeText(this,msg,Toast.LENGTH_LONG).show()}
+                }.start()
+            }
+            button("4 · Open Wi-Fi Remote & keyboard") {openController("http://127.0.0.1:"+PORT)}
+            button("Disconnect Wi-Fi remote / restore TV keyboard") {
+                AtvWifiRemote.disconnect()
+                Toast.makeText(this,"Disconnected",Toast.LENGTH_SHORT).show()
+            }
+        }
         if (BuildConfig.FLAVOR == "tv") {
-        container.addView(label("Bridge Remote Keyboard: choose it once as Android TV input method. This allows Arabic/English typing directly in a focused field. You can switch back to ALRADHY-KB anytime.", 14f))
-        button("1 · Enable ALRADHY Bridge Keyboard in Android Settings") {
-            startActivity(Intent(Settings.ACTION_INPUT_METHOD_SETTINGS))
-        }
-        button("2 · Select TV Keyboard (choose ALRADHY Bridge Keyboard)") {
-            (getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager).showInputMethodPicker()
-        }
-        container.addView(label("IME Ready: requires ALRADHY Bridge Keyboard selected AND a text field focused. Root Remote continues to control TV arrows independently.", 13f))
+        container.addView(label("ALRADHY-KB remains unchanged. For Wi-Fi Remote v2 text input use the mobile/tablet Bridge; no extra TV keyboard is required.", 14f))
         button(if (BridgeRuntime.rootEnabled) "Root Remote: ON (tap to disable)" else "Root Remote: OFF (tap to opt in)") {
             val next = !BridgeRuntime.rootEnabled
             AlertDialog.Builder(this)

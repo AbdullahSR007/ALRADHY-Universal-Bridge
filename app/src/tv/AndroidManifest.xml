@@ -9,15 +9,5 @@
                 <category android:name="android.intent.category.LEANBACK_LAUNCHER"/>
             </intent-filter>
         </activity>
-        <service android:name=".BridgeImeService"
-            android:exported="true"
-            android:permission="android.permission.BIND_INPUT_METHOD"
-            android:label="ALRADHY Bridge Keyboard">
-            <intent-filter>
-                <action android:name="android.view.InputMethod"/>
-            </intent-filter>
-            <meta-data android:name="android.view.im"
-                android:resource="@xml/bridge_ime"/>
-        </service>
     </application>
 </manifest>
