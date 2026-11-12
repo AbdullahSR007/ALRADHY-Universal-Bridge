@@ -1,0 +1,47 @@
+name: Universal Bridge v0.1 Android
+on:
+  push:
+    branches:
+      - feature/**
+      - main
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Android SDK
+        uses: android-actions/setup-android@v3
+      - name: Android 35
+        run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
+      - name: Gradle 8.13
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.13'
+      - name: Build mobile and TV APK
+        run: gradle --no-daemon --stacktrace :app:assembleMobileDebug :app:assembleTvDebug
+      - name: Package and SHA256
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          cp app/build/outputs/apk/mobile/debug/app-mobile-debug.apk dist/ALRADHY-Universal-Bridge-Mobile-v0.1.0.apk
+          cp app/build/outputs/apk/tv/debug/app-tv-debug.apk dist/ALRADHY-Universal-Bridge-TV-v0.1.0.apk
+          (cd dist && sha256sum *.apk > SHA256SUMS.txt)
+          printf '{"repository":"AbdullahSR007/ALRADHY-Universal-Bridge","branch":"%s","commitSha":"%s","runId":"%s","version":"0.1.0","signing":"debug-key; NOT stable for updates"}\n' "$GITHUB_REF_NAME" "$GITHUB_SHA" "$GITHUB_RUN_ID" > dist/build-info.json
+      - name: Upload verified build outputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: ALRADHY-Universal-Bridge-v0.1.0
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 14

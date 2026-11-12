@@ -1,3 +1,2 @@
-<resources>
-    <string name="app_name">ALRADHY Bridge</string>
-</resources>
+<?xml version="1.0" encoding="utf-8"?>
+<resources><string name="accessibility_description">Optional TV controls: paired authorized devices can request navigation actions, only when you enable this service.</string></resources>
