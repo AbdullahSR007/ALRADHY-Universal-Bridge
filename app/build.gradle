@@ -9,8 +9,8 @@ android {
         applicationId 'com.alradhy.universalbridge'
         minSdk 26
         targetSdk 34
-        versionCode 206
-        versionName '0.2.6'
+        versionCode 300
+        versionName '0.3.0-beta1'
     }
     buildFeatures { buildConfig true }
     packaging {
@@ -22,6 +22,7 @@ android {
     productFlavors {
         mobile { dimension 'device'; applicationIdSuffix '.mobile' }
         tv { dimension 'device'; applicationIdSuffix '.tv' }
+        tvhub { dimension 'device'; applicationIdSuffix '.tvhub' }
     }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17

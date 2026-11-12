@@ -271,6 +271,66 @@ object BridgeRuntime {
     }
 }
 
+/**
+ * TV Hub: browsers talk directly to a service on the TV, not via a tablet.
+ * Native Remote v2 self-pairing (where supported) or explicit local root opt-in.
+ * No input method is registered or modified.
+ */
+object TvHubDirect {
+    fun enabled():Boolean=BuildConfig.FLAVOR=="tvhub"
+    fun available():Boolean=BuildConfig.FLAVOR=="mobile" || enabled()
+    @Synchronized fun status():JSONObject {
+        val s=AtvWifiRemote.status()
+        if(enabled()){
+            val native=s.optBoolean("connected")
+            val root=BridgeRuntime.rootEnabled
+            s.put("connected",native||root).put("paired",s.optBoolean("paired")||root)
+                .put("host",BridgeRuntime.localIp())
+                .put("tvHubDirect",true)
+                .put("mode",if(native)"native_tv_service" else if(root)"root_opt_in" else "setup_required")
+        }
+        return s
+    }
+    @Synchronized fun key(context:Context,name:String):String {
+        if(!enabled())return AtvWifiRemote.key(name)
+        if(AtvWifiRemote.status().optBoolean("connected")) {
+            try{return AtvWifiRemote.key(name)}
+            catch(e:Exception){if(!BridgeRuntime.rootEnabled)throw e}
+        }
+        if(BridgeRuntime.rootEnabled){
+            val r=BridgeRuntime.sendKey(context,name)
+            if(!r.first)throw IllegalStateException("TV Hub: "+r.second)
+            return "TV Hub directly executed "+name
+        }
+        return AtvWifiRemote.key(name)
+    }
+    @Synchronized fun sendText(context:Context,text:String):Pair<String,String> {
+        require(text.isNotBlank() && text.length<=12000){"Invalid text length"}
+        if(!enabled())return Pair(AtvWifiRemote.text(text,false),"native_sent")
+        if(AtvWifiRemote.status().optBoolean("paired")){
+            try{return Pair(AtvWifiRemote.text(text,false),"native_sent")}
+            catch(ex:Exception){if(!BridgeRuntime.rootEnabled)throw ex}
+        }
+        if(BridgeRuntime.rootEnabled){
+            val result=BridgeRuntime.pasteToFocusedField(context,text)
+            return Pair(result.second,result.first)
+        }
+        throw IllegalStateException("TV Hub Unicode typing needs native Remote v2 self-pairing or optional root paste")
+    }
+    @Synchronized fun live(context:Context,op:String,text:String):String {
+        if(!enabled())return AtvWifiRemote.edit(op,text)
+        if(op=="type")return sendText(context,text).first
+        if(AtvWifiRemote.status().optBoolean("paired"))
+            return AtvWifiRemote.edit(op,text)
+        val keyCode=when(op){"backspace"->67;"enter"->66;"left"->21;"right"->22;else->throw IllegalArgumentException("Invalid edit")}
+        require(BridgeRuntime.rootEnabled){"TV Hub live key needs native Remote v2 pairing or opt-in Root Remote"}
+        val process=ProcessBuilder("su","-c","input keyevent "+keyCode).start()
+        if(!process.waitFor(3,TimeUnit.SECONDS)||process.exitValue()!=0)throw IllegalStateException("TV Hub keyevent failed")
+        return "TV Hub keyevent sent"
+    }
+    fun endInput(){AtvWifiRemote.endInput()}
+}
+
 class BridgeHttpServer(private val app: Context) : NanoHTTPD(PORT) {
     init { BridgeRuntime.init(app) }
     private fun reply(code: Response.Status, data: JSONObject): Response =
@@ -297,12 +357,13 @@ class BridgeHttpServer(private val app: Context) : NanoHTTPD(PORT) {
             if (s.method == Method.GET && path == "/api/status") {
                 return reply(Response.Status.OK, okay(
                     "name" to "ALRADHY Universal Bridge",
-                    "platform" to if (BuildConfig.FLAVOR == "tv") "Android TV" else "Android",
-                    "version" to "0.2.6",
+                    "platform" to if (TvHubDirect.enabled()) "Android TV Direct Hub" else if (BuildConfig.FLAVOR == "tv") "Android TV" else "Android",
+                    "version" to "0.3.0-beta1",
                     "accessibility" to (BridgeAccessibilityService.instance != null),
                     "imeReady" to BridgeImeService.isReady(),
                     "root" to BridgeRuntime.rootEnabled,
-                    "nativeEnabled" to (BuildConfig.FLAVOR=="mobile"),
+                    "nativeEnabled" to TvHubDirect.available(),
+                    "tvHubMode" to TvHubDirect.enabled(),
                     "gatewayUrl" to ("http://"+BridgeRuntime.localIp()+":"+PORT)
                 ))
             }
@@ -346,62 +407,63 @@ class BridgeHttpServer(private val app: Context) : NanoHTTPD(PORT) {
             when (path) {
                 "/api/native/status" -> {
                     if (BuildConfig.FLAVOR!="mobile") return error(Response.Status.FORBIDDEN,"Use the mobile Bridge host")
-                    reply(Response.Status.OK,okay("native" to AtvWifiRemote.status(),"devices" to AtvWifiRemote.discoveries()))
+                    reply(Response.Status.OK,okay("native" to TvHubDirect.status(),"devices" to AtvWifiRemote.discoveries()))
                 }
                 // Browser clients use the tablet's existing TV Remote v2 instance.
                 // Browsers never pair with the TV or receive the TLS certificate.
                 "/api/remote/status" -> {
-                    if (BuildConfig.FLAVOR!="mobile") return error(Response.Status.FORBIDDEN,"Open tablet Bridge, not TV Bridge")
+                    if (!TvHubDirect.available()) return error(Response.Status.FORBIDDEN,"Open a Mobile Bridge or TV Hub")
                     if (s.method!=Method.GET) return error(Response.Status.BAD_REQUEST,"GET required")
-                    reply(Response.Status.OK,okay("native" to AtvWifiRemote.status(),"via" to "tablet_bridge"))
+                    reply(Response.Status.OK,okay("native" to TvHubDirect.status(),"via" to if(TvHubDirect.enabled())"tv_direct_hub" else "tablet_bridge"))
                 }
                 "/api/remote/key" -> {
-                    if (BuildConfig.FLAVOR!="mobile") return error(Response.Status.FORBIDDEN,"Open tablet Bridge, not TV Bridge")
+                    if (!TvHubDirect.available()) return error(Response.Status.FORBIDDEN,"Open a Mobile Bridge or TV Hub")
                     if (s.method!=Method.POST) return error(Response.Status.BAD_REQUEST,"POST required")
-                    reply(Response.Status.OK,okay("result" to AtvWifiRemote.key(obj.optString("key")),"via" to "tablet_bridge"))
+                    reply(Response.Status.OK,okay("result" to TvHubDirect.key(app,obj.optString("key")),"via" to if(TvHubDirect.enabled())"tv_direct_hub" else "tablet_bridge"))
                 }
                 "/api/remote/text" -> {
-                    if (BuildConfig.FLAVOR!="mobile") return error(Response.Status.FORBIDDEN,"Open tablet Bridge, not TV Bridge")
+                    if (!TvHubDirect.available()) return error(Response.Status.FORBIDDEN,"Open a Mobile Bridge or TV Hub")
                     if (s.method!=Method.POST) return error(Response.Status.BAD_REQUEST,"POST required")
-                    reply(Response.Status.OK,okay("result" to AtvWifiRemote.text(obj.optString("text"),false),"delivery" to "native_sent"))
+                    val sent=TvHubDirect.sendText(app,obj.optString("text"))
+                    reply(Response.Status.OK,okay("result" to sent.first,"delivery" to sent.second))
                 }
                 "/api/remote/live" -> {
-                    if (BuildConfig.FLAVOR!="mobile") return error(Response.Status.FORBIDDEN,"Open tablet Bridge, not TV Bridge")
+                    if (!TvHubDirect.available()) return error(Response.Status.FORBIDDEN,"Open a Mobile Bridge or TV Hub")
                     if (s.method!=Method.POST) return error(Response.Status.BAD_REQUEST,"POST required")
                     val text=obj.optString("text","")
                     if (text.length>256) return error(Response.Status.BAD_REQUEST,"Live text too long")
-                    reply(Response.Status.OK,okay("result" to AtvWifiRemote.edit(obj.optString("op"),text)))
+                    reply(Response.Status.OK,okay("result" to TvHubDirect.live(app,obj.optString("op"),text)))
                 }
                 "/api/remote/direct/end" -> {
-                    if (BuildConfig.FLAVOR!="mobile") return error(Response.Status.FORBIDDEN,"Open tablet Bridge, not TV Bridge")
+                    if (!TvHubDirect.available()) return error(Response.Status.FORBIDDEN,"Open a Mobile Bridge or TV Hub")
                     if (s.method!=Method.POST) return error(Response.Status.BAD_REQUEST,"POST required")
-                    AtvWifiRemote.endInput()
+                    TvHubDirect.endInput()
                     reply(Response.Status.OK,okay("closed" to true))
                 }
                 "/api/native/scan" -> {
-                    if (BuildConfig.FLAVOR!="mobile") return error(Response.Status.FORBIDDEN,"Mobile only")
+                    if (!TvHubDirect.available()) return error(Response.Status.FORBIDDEN,"Use mobile or TV Hub")
                     reply(Response.Status.OK,okay("message" to AtvWifiRemote.scan()))
                 }
                 "/api/native/pair/start" -> {
-                    if (BuildConfig.FLAVOR!="mobile") return error(Response.Status.FORBIDDEN,"Mobile only")
+                    if (!TvHubDirect.available()) return error(Response.Status.FORBIDDEN,"Use mobile or TV Hub")
                     reply(Response.Status.OK,okay("message" to AtvWifiRemote.startPair(obj.optString("ip"))))
                 }
                 "/api/native/pair/finish" -> {
-                    if (BuildConfig.FLAVOR!="mobile") return error(Response.Status.FORBIDDEN,"Mobile only")
+                    if (!TvHubDirect.available()) return error(Response.Status.FORBIDDEN,"Use mobile or TV Hub")
                     reply(Response.Status.OK,okay("message" to AtvWifiRemote.finishPair(obj.optString("code"))))
                 }
                 "/api/native/connect" -> {
-                    if (BuildConfig.FLAVOR!="mobile") return error(Response.Status.FORBIDDEN,"Mobile only")
+                    if (!TvHubDirect.available()) return error(Response.Status.FORBIDDEN,"Use mobile or TV Hub")
                     reply(Response.Status.OK,okay("message" to AtvWifiRemote.connect(obj.optString("ip"))))
                 }
                 "/api/native/disconnect" -> {
-                    if (BuildConfig.FLAVOR!="mobile") return error(Response.Status.FORBIDDEN,"Mobile only")
+                    if (!TvHubDirect.available()) return error(Response.Status.FORBIDDEN,"Use mobile or TV Hub")
                     AtvWifiRemote.disconnect()
                     reply(Response.Status.OK,okay("disconnected" to true))
                 }
                 "/api/native/key" -> {
-                    if (BuildConfig.FLAVOR!="mobile") return error(Response.Status.FORBIDDEN,"Mobile only")
-                    reply(Response.Status.OK,okay("result" to AtvWifiRemote.key(obj.optString("key"))))
+                    if (!TvHubDirect.available()) return error(Response.Status.FORBIDDEN,"Use mobile or TV Hub")
+                    reply(Response.Status.OK,okay("result" to TvHubDirect.key(app,obj.optString("key"))))
                 }
                 "/api/native/echo" -> {
                     if (s.method != Method.POST)
@@ -416,17 +478,17 @@ class BridgeHttpServer(private val app: Context) : NanoHTTPD(PORT) {
                         "codePoints" to sample.codePointCount(0, sample.length)))
                 }
                 "/api/native/text" -> {
-                    if (BuildConfig.FLAVOR!="mobile") return error(Response.Status.FORBIDDEN,"Mobile only")
+                    if (!TvHubDirect.available()) return error(Response.Status.FORBIDDEN,"Use mobile or TV Hub")
                     reply(Response.Status.OK,okay("result" to AtvWifiRemote.text(obj.optString("text"),false),"delivery" to "native_sent"))
                 }
                 "/api/native/live" -> {
-                    if (BuildConfig.FLAVOR!="mobile") return error(Response.Status.FORBIDDEN,"Mobile only")
+                    if (!TvHubDirect.available()) return error(Response.Status.FORBIDDEN,"Use mobile or TV Hub")
                     val text=obj.optString("text","")
                     if(text.length>256)return error(Response.Status.BAD_REQUEST,"Live chunk too large")
                     reply(Response.Status.OK,okay("result" to AtvWifiRemote.edit(obj.optString("op"),text),"delivery" to "native_sent"))
                 }
                 "/api/native/direct/end" -> {
-                    if (BuildConfig.FLAVOR!="mobile") return error(Response.Status.FORBIDDEN,"Mobile only")
+                    if (!TvHubDirect.available()) return error(Response.Status.FORBIDDEN,"Use mobile or TV Hub")
                     AtvWifiRemote.endInput()
                     reply(Response.Status.OK,okay("closed" to true))
                 }
@@ -516,7 +578,7 @@ class BridgeService : Service() {
     override fun onCreate() {
         super.onCreate()
         BridgeRuntime.init(applicationContext)
-        if(BuildConfig.FLAVOR=="mobile")AtvWifiRemote.init(applicationContext)
+        if(TvHubDirect.available())AtvWifiRemote.init(applicationContext)
         val channel = "bridge_session"
         val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         if (Build.VERSION.SDK_INT >= 26) {
@@ -538,7 +600,7 @@ class BridgeService : Service() {
     }
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int = START_STICKY
     override fun onDestroy() {
-        if (BuildConfig.FLAVOR=="mobile") AtvWifiRemote.disconnect()
+        if (TvHubDirect.available()) AtvWifiRemote.disconnect()
         BridgeRuntime.server?.stop(); BridgeRuntime.server = null
         super.onDestroy()
     }
@@ -671,15 +733,15 @@ class MainActivity : Activity() {
                     "\nhttp://" + BridgeRuntime.localIp() + ":" + PORT +
                     "\nPairing PIN: " + BridgeRuntime.pairingPin +
                     "\nConnected sessions: " + BridgeRuntime.sessions.size +
-                    (if (BuildConfig.FLAVOR=="mobile") {
-                        val native = AtvWifiRemote.status()
+                    (if (TvHubDirect.available()) {
+                        val native = TvHubDirect.status()
                         "\n📡 Native Wi-Fi Remote: " + (if (native.optBoolean("connected")) "Connected ✓" else
                             if (native.optBoolean("paired")) "Paired · reconnect" else "Not paired") +
                             "\nTV IP: " + native.optString("host", "not set")
                     } else "\nTV Bridge active · ALRADHY-KB unchanged")
             }
             checkPending()
-            if(BuildConfig.FLAVOR=="mobile")AtvWifiRemote.tick()
+            if(TvHubDirect.available())AtvWifiRemote.tick()
             handler.postDelayed(this, 1500)
         }
     }
@@ -705,8 +767,8 @@ class MainActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         BridgeRuntime.init(applicationContext)
-        if(BuildConfig.FLAVOR=="mobile")AtvWifiRemote.init(applicationContext)
-        BridgeRuntime.rootEnabled = BuildConfig.FLAVOR == "tv" &&
+        if(TvHubDirect.available())AtvWifiRemote.init(applicationContext)
+        BridgeRuntime.rootEnabled = (BuildConfig.FLAVOR == "tv" || TvHubDirect.enabled()) &&
             getSharedPreferences("bridge", MODE_PRIVATE).getBoolean("root", false)
         window.decorView.setBackgroundColor(Color.rgb(8, 11, 18))
         val scroller = ScrollView(this)
@@ -717,7 +779,7 @@ class MainActivity : Activity() {
         scroller.addView(container)
         setContentView(scroller)
         container.addView(label("ALRADHY\nUNIVERSAL BRIDGE", 28f))
-        container.addView(label("Local-first • Trusted Wi-Fi only • v0.2.6", 14f))
+        container.addView(label("Local-first • Trusted Wi-Fi only • v0.3.0-beta1", 14f))
         statusText = label("")
         container.addView(statusText)
         container.addView(label("Security: This prototype uses unencrypted local HTTP. Never share passwords or sensitive text.", 13f))
@@ -757,13 +819,20 @@ class MainActivity : Activity() {
                 openController("http://" + ip + ":" + PORT)
             }
         }
-        if (BuildConfig.FLAVOR=="mobile") {
-            container.addView(label("📡 Android TV Remote v2 over Wi-Fi · No Root or TV keyboard installation", 19f))
+        if (TvHubDirect.enabled()) {
+            container.addView(label("📺 TV HUB · متصفح الكمبيوتر مباشرة", 23f))
+            container.addView(label("TV Hub address: http://"+BridgeRuntime.localIp()+":"+PORT, 20f))
+            container.addView(label("افتح العنوان من الكمبيوتر أو الآيفون على نفس Wi-Fi، ووافق على أول متصفح من شاشة هذا التلفزيون.", 16f))
+            container.addView(label("طرق التحكم: Root Remote اختياري للأزرار (بالأسفل)، أو اقتران خدمة Android TV Remote المدمجة بالتلفزيون نفسه. لا تغيير في ALRADHY-KB.", 14f))
+            button("📺 فتح لوحة TV Hub") {openController("http://127.0.0.1:"+PORT)}
+        }
+        if (TvHubDirect.available()) {
+            container.addView(label(if(TvHubDirect.enabled())"TV Hub · Optional native self-pair" else "📡 Android TV Remote v2 over Wi-Fi · No Root or TV keyboard installation", 19f))
             container.addView(label("Pair with the built-in Android TV Remote Service on TV. ALRADHY-KB stays installed and your default.", 14f))
             val nativeIp=EditText(this).apply {
                 hint="TV IPv4 address (e.g. 192.168.1.20)"
                 setSingleLine(true)
-                setText(AtvWifiRemote.host)
+                setText(if(TvHubDirect.enabled())BridgeRuntime.localIp() else AtvWifiRemote.host)
                 setTextColor(Color.WHITE)
                 setHintTextColor(Color.LTGRAY)
             }
@@ -802,7 +871,7 @@ class MainActivity : Activity() {
                 Toast.makeText(this,"Disconnected",Toast.LENGTH_SHORT).show()
             }
         }
-        if (BuildConfig.FLAVOR == "tv") {
+        if (BuildConfig.FLAVOR == "tv" || TvHubDirect.enabled()) {
         container.addView(label("ALRADHY-KB remains unchanged. For Wi-Fi Remote v2 text input use the mobile/tablet Bridge; no extra TV keyboard is required.", 14f))
         button(if (BridgeRuntime.rootEnabled) "Root Remote: ON (tap to disable)" else "Root Remote: OFF (tap to opt in)") {
             val next = !BridgeRuntime.rootEnabled

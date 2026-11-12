@@ -16,7 +16,7 @@ h1,h2,h3,p{margin:0}.brand h1{font-size:24px;letter-spacing:3px}.brand p,.subtit
 <body>
 <div class="wrap">
 <header class="header"><div class="brand"><div class="logo">A</div><div><h1>ALRADHY</h1><p>UNIVERSAL BRIDGE · جسر واحد، كل أجهزتك</p></div></div><span class="badge" id="bridgeStatus">● Connecting...</span></header>
-<div class="hero"><div><h2>نصوصك، أجهزتك .. في مكان واحد</h2><p>Your Content. Your Devices. One Place.</p></div><div class="badge">v0.2.6 • Local First</div></div>
+<div class="hero"><div><h2>نصوصك، أجهزتك .. في مكان واحد</h2><p>Your Content. Your Devices. One Place.</p></div><div class="badge">v0.3.0-beta1 • Local First</div></div>
 <nav class="rows" style="margin-bottom:16px">
 <button id="wifiQuickAccess" class="primary">📡 Wi-Fi Remote · فتح الريموت</button>
 <button id="keyboardQuickAccess">⌨ الكتابة العربية</button>
@@ -77,7 +77,7 @@ h1,h2,h3,p{margin:0}.brand h1{font-size:24px;letter-spacing:3px}.brand p,.subtit
   <div class="card"><h2>📋 Clipboard Hub</h2><p class="subtitle">نسخ ونقل نصوص وروابط بين الأجهزة</p><h3 style="margin:19px 0 10px">النص المُستلم على الجسر</h3><textarea id="received" readonly placeholder="لم يصل نص بعد"></textarea><div class="rows" style="margin-top:9px"><button id="copyReceived">نسخ إلى هذا الجهاز</button><button id="refreshClipboard">تحديث</button></div><h3 style="margin:20px 0 10px">مشاركة نص جديد</h3><textarea id="clipboardText" placeholder="اكتب أو الصق النص هنا..."></textarea><div class="rows" style="margin-top:9px"><button id="browserPaste">لصق من الحافظة</button><button class="primary" id="sendClipboard">إرسال للجسر</button></div><div class="feedback" id="clipboardMsg"></div><p class="section-note">بعض المتصفحات، خصوصًا Safari على HTTP، تمنع Clipboard API. يمكنك دائمًا اللصق يدويًا في مربع النص.</p></div>
   <div class="card"><h2>ℹ️ معلومات الجسر</h2><div class="logline"><strong>Protocol</strong>LAN HTTP prototype · No cloud</div><div class="logline"><strong>Pairing</strong>PIN + host approval</div><div class="logline"><strong>Session</strong>30 min inactivity expiry</div><div class="logline"><strong>Privacy</strong>Text stays on the host / LAN</div></div>
 </section>
-</div><footer class="foot">ALRADHY Universal Bridge · Designed for Android, Android TV and modern browsers · v0.2.6</footer>
+</div><footer class="foot">ALRADHY Universal Bridge · Designed for Android, Android TV and modern browsers · v0.3.0-beta1</footer>
 </div>
 
 <div class="auth" id="authScreen"><div class="authpanel"><div class="brand"><div class="logo">A</div><div><h2>اقتران آمن محليًا</h2><p>ALRADHY Universal Bridge</p></div></div><p>افتح التطبيق على الجهاز المضيف، ثم أدخل رمز الاقتران الظاهر على شاشته. بعد ذلك وافق من شاشة المضيف.</p>
@@ -100,7 +100,7 @@ function clearBrowserToken(){
   sessionStorage.removeItem(tokenKey);
   try{localStorage.removeItem(tokenKey)}catch(e){}
 }
-let token=savedBrowserToken(),currentRevision=-1,pairingPoll=null,nativeMode=false;
+let token=savedBrowserToken(),currentRevision=-1,pairingPoll=null,nativeMode=false,tvHubMode=false;
 const browserRelay=()=>nativeMode && location.hostname!=='127.0.0.1' && location.hostname!=='localhost';
 const remoteApi=(name)=>browserRelay()?'/api/remote/'+name:'/api/native/'+name;
 function say(id,text,good=true){$(id).textContent=text;$(id).style.color=good?'#20c997':'#ff9ba4'}
@@ -114,12 +114,15 @@ async function request(path,method='GET',data=null,auth=true){
   return j;
 }
 async function initialStatus(){
-  try {const s=await request('/api/status','GET',null,false);nativeMode=!!s.nativeEnabled; if(nativeMode){
+  try {const s=await request('/api/status','GET',null,false);nativeMode=!!s.nativeEnabled; tvHubMode=!!s.tvHubMode; if(nativeMode){
     $('nativeWifiCard').classList.remove('hide');
     $('nativeGatewayUrl').textContent=s.gatewayUrl||'راجع عنوان التابلت في تطبيق Bridge';
     if(browserRelay()) {
       $('nativeAdvancedControls').classList.add('hide');
       $('browserRelayHelp').classList.remove('hide');
+      $('browserRelayHelp').textContent=tvHubMode?
+      '✓ اتصال مباشر من المتصفح إلى TV Hub على التلفزيون. لا تحتاج التابلت.':
+      '✓ المتصفح يستخدم اتصال Wi-Fi Remote الموجود في تطبيق التابلت.';
     }
   }else{$('tvBrowserWarning').classList.remove('hide');}$('bridgeStatus').textContent='● '+s.platform+' · Online';$('accessState').textContent=s.accessibility?'ON':'OFF';$('rootState').textContent=s.root?'ON':'OFF';if(token){$('authScreen').classList.add('hide');await refresh()}}
   catch(e){$('bridgeStatus').textContent='○ Connection Error';say('pairMsg',e.message,false)}
@@ -202,7 +205,7 @@ async function refreshNativeStatus(){
       +(s.nativeImeActive?' · إدخال نص مؤقت':'')+' · '+(s.phase||'idle');
     $('nativeWifiStat').textContent=s.connected?'متصل ✓':s.paired?'مقترن':'غير متصل';
     $('nativeWifiStat').style.color=s.connected?'#20c997':'#ffbf69';
-    $('nativeWifiTvIp').textContent=s.host?'TV · '+s.host:'لم يتم تحديد التلفزيون';
+    $('nativeWifiTvIp').textContent=s.host?(tvHubMode?'TV Hub · ':'TV · ')+s.host:'لم يتم تحديد التلفزيون';
     if(s.host&&!$('nativeTvIp').value)$('nativeTvIp').value=s.host;
     const list=$('nativeFound'), selected=list.value;
     list.replaceChildren(new Option('اختر جهازًا مكتشفًا...', ''));

@@ -353,7 +353,7 @@ object AtvWifiRemote {
         return address.hostAddress.orEmpty()
     }
     @Synchronized fun startPair(ip:String):String {
-        if(BuildConfig.FLAVOR!="mobile")return "Wi-Fi Remote pairing is available from mobile/tablet app only"
+        if(BuildConfig.FLAVOR!="mobile" && BuildConfig.FLAVOR!="tvhub")return "This version cannot pair"
         closePair()
         try{
             val candidate=validHost(ip)

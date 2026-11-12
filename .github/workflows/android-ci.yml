@@ -83,21 +83,40 @@ jobs:
           assert "application/json; charset=UTF-8" in w
           print("Browser -> tablet Wi-Fi Remote relay checks passed")
           PY
+      - name: Verify standalone TV Hub wiring
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          g=Path("app/build.gradle").read_text()
+          c=Path("app/src/main/java/com/alradhy/universalbridge/BridgeCore.kt").read_text()
+          w=Path("app/src/main/assets/web/index.html").read_text()
+          m=Path("app/src/tvhub/AndroidManifest.xml").read_text()
+          assert "applicationIdSuffix '.tvhub'" in g
+          assert 'LEANBACK_LAUNCHER' in m
+          assert 'object TvHubDirect' in c
+          assert 'TvHubDirect.key(app,obj.optString("key"))' in c
+          assert '"tvHubMode" to TvHubDirect.enabled()' in c
+          assert "tvHubMode=!!s.tvHubMode" in w
+          assert 'rememberBrowser(token,p.client,expiry)' in c
+          print("Standalone TV Hub compile-time wiring checks OK")
+          PY
       - name: Build mobile and TV APK
-        run: gradle --no-daemon --stacktrace :app:assembleMobileDebug :app:assembleTvDebug
+        run: gradle --no-daemon --stacktrace :app:assembleMobileDebug :app:assembleTvDebug :app:assembleTvhubDebug
       - name: Package and SHA256
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p dist
-          cp app/build/outputs/apk/mobile/debug/app-mobile-debug.apk dist/ALRADHY-Universal-Bridge-Mobile-v0.2.6.apk
-          cp app/build/outputs/apk/tv/debug/app-tv-debug.apk dist/ALRADHY-Universal-Bridge-TV-v0.2.6.apk
+          cp app/build/outputs/apk/mobile/debug/app-mobile-debug.apk dist/ALRADHY-Universal-Bridge-Mobile-v0.3.0-beta1.apk
+          cp app/build/outputs/apk/tv/debug/app-tv-debug.apk dist/ALRADHY-Universal-Bridge-TV-Legacy-v0.3.0-beta1.apk
+          cp app/build/outputs/apk/tvhub/debug/app-tvhub-debug.apk dist/ALRADHY-Universal-Bridge-TV-Hub-v0.3.0-beta1.apk
           (cd dist && sha256sum *.apk > SHA256SUMS.txt)
-          printf '{"repository":"AbdullahSR007/ALRADHY-Universal-Bridge","branch":"%s","commitSha":"%s","runId":"%s","version":"0.2.6","signing":"debug-key; NOT stable for updates"}\n' "$GITHUB_REF_NAME" "$GITHUB_SHA" "$GITHUB_RUN_ID" > dist/build-info.json
+          printf '{"repository":"AbdullahSR007/ALRADHY-Universal-Bridge","branch":"%s","commitSha":"%s","runId":"%s","version":"0.3.0-beta1","signing":"debug-key; NOT stable for updates"}\n' "$GITHUB_REF_NAME" "$GITHUB_SHA" "$GITHUB_RUN_ID" > dist/build-info.json
       - name: Upload verified build outputs
         uses: actions/upload-artifact@v4
         with:
-          name: ALRADHY-Universal-Bridge-v0.2.6
+          name: ALRADHY-Universal-Bridge-v0.3.0-beta1
           path: dist/*
           if-no-files-found: error
           retention-days: 14
