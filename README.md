@@ -25,3 +25,6 @@ The Android packages are separate variants: mobile=com.alradhy.universalbridge.m
 
 ## v0.1.1 reduced-permission mobile flavor
 The mobile APK does not declare Accessibility or Android IME services. They are registered only in the TV variant. Launcher adaptive icon is custom ALRADHY artwork. This reduces risk indicators but DOES NOT guarantee that Google Play Protect will allow side-loaded development APKs. Development/debug signing remains unchanged per build and may prevent seamless upgrades. Never disable Play Protect to install this app.
+
+## v0.1.2 TV Safe Mode — Play Protect remediation
+The TV APK no longer declares Accessibility or IME services (nor SMS/notification-listener privileges). The mobile APK already omitted them. This responds to Google's documented internet-sideloading protection for APKs declaring ACCESSIBILITY. TV remote navigation now requires explicitly opted-in Root Remote on an owner-controlled TV; without root, clipboard-only and browser panel remain functional. Remote text goes to clipboard, not an input field. Keep Play Protect ON. Installation acceptance is controlled by Google; successful build does not guarantee acceptance. This prototype's HTTP transport is not encrypted and should not carry sensitive data. Debug signatures are not stable for upgrades.

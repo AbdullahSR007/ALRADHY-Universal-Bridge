@@ -178,7 +178,7 @@ object BridgeRuntime {
                 return Pair(true, "Android stream adjustment requested (HDMI volume may not change)")
             } catch (_: Exception) { /* try root fallback below */ }
         }
-        if (!rootEnabled) return Pair(false, "Enable Accessibility on TV or opt-in Root Remote on host")
+        if (!rootEnabled) return Pair(false, "Remote navigation requires TV Root Remote opt-in; not available without it")
         val code = eventCodes[key] ?: return Pair(false, "Unsupported")
         return try {
             val process = ProcessBuilder("su", "-c", "input keyevent " + code).start()
@@ -216,7 +216,7 @@ class BridgeHttpServer(private val app: Context) : NanoHTTPD(PORT) {
                 return reply(Response.Status.OK, okay(
                     "name" to "ALRADHY Universal Bridge",
                     "platform" to if (BuildConfig.FLAVOR == "tv") "Android TV" else "Android",
-                    "version" to "0.1.1",
+                    "version" to "0.1.2",
                     "accessibility" to (BridgeAccessibilityService.instance != null),
                     "root" to BridgeRuntime.rootEnabled
                 ))
@@ -411,7 +411,7 @@ class MainActivity : Activity() {
         scroller.addView(container)
         setContentView(scroller)
         container.addView(label("ALRADHY\nUNIVERSAL BRIDGE", 28f))
-        container.addView(label("Local-first • Trusted Wi-Fi only • v0.1.1", 14f))
+        container.addView(label("Local-first • Trusted Wi-Fi only • v0.1.2", 14f))
         statusText = label("")
         container.addView(statusText)
         container.addView(label("Security: This prototype uses unencrypted local HTTP. Never share passwords or sensitive text.", 13f))
@@ -442,12 +442,7 @@ class MainActivity : Activity() {
             }
         }
         if (BuildConfig.FLAVOR == "tv") {
-        button("⚙ Enable Android Accessibility service (optional)") {
-            startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
-        }
-        button("⌨ Choose ALRADHY text input service (optional)") {
-            (getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager).showInputMethodPicker()
-        }
+        container.addView(label("TV Safe Mode: no Accessibility or IME services requested. Remote navigation requires opt-in Root Remote on your own TV; incoming text is copied to the clipboard.", 14f))
         button(if (BridgeRuntime.rootEnabled) "Root Remote: ON (tap to disable)" else "Root Remote: OFF (tap to opt in)") {
             val next = !BridgeRuntime.rootEnabled
             AlertDialog.Builder(this)

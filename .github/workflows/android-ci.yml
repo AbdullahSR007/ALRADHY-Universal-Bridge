@@ -37,14 +37,14 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p dist
-          cp app/build/outputs/apk/mobile/debug/app-mobile-debug.apk dist/ALRADHY-Universal-Bridge-Mobile-v0.1.1.apk
-          cp app/build/outputs/apk/tv/debug/app-tv-debug.apk dist/ALRADHY-Universal-Bridge-TV-v0.1.1.apk
+          cp app/build/outputs/apk/mobile/debug/app-mobile-debug.apk dist/ALRADHY-Universal-Bridge-Mobile-v0.1.2.apk
+          cp app/build/outputs/apk/tv/debug/app-tv-debug.apk dist/ALRADHY-Universal-Bridge-TV-v0.1.2.apk
           (cd dist && sha256sum *.apk > SHA256SUMS.txt)
-          printf '{"repository":"AbdullahSR007/ALRADHY-Universal-Bridge","branch":"%s","commitSha":"%s","runId":"%s","version":"0.1.1","signing":"debug-key; NOT stable for updates"}\n' "$GITHUB_REF_NAME" "$GITHUB_SHA" "$GITHUB_RUN_ID" > dist/build-info.json
+          printf '{"repository":"AbdullahSR007/ALRADHY-Universal-Bridge","branch":"%s","commitSha":"%s","runId":"%s","version":"0.1.2","signing":"debug-key; NOT stable for updates"}\n' "$GITHUB_REF_NAME" "$GITHUB_SHA" "$GITHUB_RUN_ID" > dist/build-info.json
       - name: Upload verified build outputs
         uses: actions/upload-artifact@v4
         with:
-          name: ALRADHY-Universal-Bridge-v0.1.1
+          name: ALRADHY-Universal-Bridge-v0.1.2
           path: dist/*
           if-no-files-found: error
           retention-days: 14

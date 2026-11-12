@@ -16,12 +16,12 @@ h1,h2,h3,p{margin:0}.brand h1{font-size:24px;letter-spacing:3px}.brand p,.subtit
 <body>
 <div class="wrap">
 <header class="header"><div class="brand"><div class="logo">A</div><div><h1>ALRADHY</h1><p>UNIVERSAL BRIDGE · جسر واحد، كل أجهزتك</p></div></div><span class="badge" id="bridgeStatus">● Connecting...</span></header>
-<div class="hero"><div><h2>نصوصك، أجهزتك .. في مكان واحد</h2><p>Your Content. Your Devices. One Place.</p></div><div class="badge">v0.1.1 • Local First</div></div>
+<div class="hero"><div><h2>نصوصك، أجهزتك .. في مكان واحد</h2><p>Your Content. Your Devices. One Place.</p></div><div class="badge">v0.1.2 • Local First</div></div>
 <div class="security">نسخة تطوير: الاتصال المحلي HTTP غير مشفّر. استخدم شبكة منزلية موثوقة فقط، ولا ترسل كلمات مرور أو نصوصًا سرية. المزامنة يدويّة في هذه النسخة.</div>
 <div class="grid">
 <section class="stack">
   <div class="card"><h2>الأجهزة والجلسات</h2><p class="subtitle">الأجهزة المتصلة بهذا الجسر</p><div class="statrow"><div class="stat"><b id="deviceCount">0</b><span>جلسات فعالة</span></div><div class="stat"><b id="accessState">—</b><span>Accessibility</span></div><div class="stat"><b id="rootState">—</b><span>Root Remote</span></div></div><div id="deviceList" class="history" style="margin-top:12px"></div><div class="section-note">يطلب كل جهاز جديد موافقةً صريحة من شاشة الجهاز المضيف.</div></div>
-  <div class="card"><h2>التحكم الآمن</h2><p class="section-note">Back وHome وD-pad يحتاجان Accessibility المفعّلة على التلفزيون، أو Root Remote باختيارك. زر التشغيل يحتاج Root وقد لا يعمل مع كل تلفزيون.</p><button class="danger" id="disconnect" style="margin-top:15px;width:100%">فصل جلستي الحالية</button></div>
+  <div class="card"><h2>التحكم الآمن</h2><p class="section-note">في نسخة TV Safe Mode، تحتاج أزرار Back وHome والأسهم تفعيل Root Remote يدويًا من التلفزيون. زر Power قد لا يعمل حسب الجهاز. الاتصال HTTP غير مشفّر.</p><button class="danger" id="disconnect" style="margin-top:15px;width:100%">فصل جلستي الحالية</button></div>
 </section>
 <section class="stack">
   <div class="card"><div class="remotehead"><h2>🎮 ريموت التلفزيون</h2><span class="muted" id="remoteState">جاهز</span></div><div class="controls"><button data-key="POWER">⏻ Power</button><button data-key="HOME">⌂ Home</button><button data-key="MENU">☰ Menu</button></div>
@@ -35,7 +35,7 @@ h1,h2,h3,p{margin:0}.brand h1{font-size:24px;letter-spacing:3px}.brand p,.subtit
   <div class="card"><h2>📋 Clipboard Hub</h2><p class="subtitle">نسخ ونقل نصوص وروابط بين الأجهزة</p><h3 style="margin:19px 0 10px">النص المُستلم على الجسر</h3><textarea id="received" readonly placeholder="لم يصل نص بعد"></textarea><div class="rows" style="margin-top:9px"><button id="copyReceived">نسخ إلى هذا الجهاز</button><button id="refreshClipboard">تحديث</button></div><h3 style="margin:20px 0 10px">مشاركة نص جديد</h3><textarea id="clipboardText" placeholder="اكتب أو الصق النص هنا..."></textarea><div class="rows" style="margin-top:9px"><button id="browserPaste">لصق من الحافظة</button><button class="primary" id="sendClipboard">إرسال للجسر</button></div><div class="feedback" id="clipboardMsg"></div><p class="section-note">بعض المتصفحات، خصوصًا Safari على HTTP، تمنع Clipboard API. يمكنك دائمًا اللصق يدويًا في مربع النص.</p></div>
   <div class="card"><h2>ℹ️ معلومات الجسر</h2><div class="logline"><strong>Protocol</strong>LAN HTTP prototype · No cloud</div><div class="logline"><strong>Pairing</strong>PIN + host approval</div><div class="logline"><strong>Session</strong>30 min inactivity expiry</div><div class="logline"><strong>Privacy</strong>Text stays on the host / LAN</div></div>
 </section>
-</div><footer class="foot">ALRADHY Universal Bridge · Designed for Android, Android TV and modern browsers · v0.1.1</footer>
+</div><footer class="foot">ALRADHY Universal Bridge · Designed for Android, Android TV and modern browsers · v0.1.2</footer>
 </div>
 
 <div class="auth" id="authScreen"><div class="authpanel"><div class="brand"><div class="logo">A</div><div><h2>اقتران آمن محليًا</h2><p>ALRADHY Universal Bridge</p></div></div><p>افتح التطبيق على الجهاز المضيف، ثم أدخل رمز الاقتران الظاهر على شاشته. بعد ذلك وافق من شاشة المضيف.</p>
