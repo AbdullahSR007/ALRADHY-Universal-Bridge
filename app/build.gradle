@@ -12,6 +12,7 @@ android {
         versionCode 100
         versionName '0.1.0'
     }
+    buildFeatures { buildConfig true }
     flavorDimensions 'device'
     productFlavors {
         mobile { dimension 'device'; applicationIdSuffix '.mobile' }
