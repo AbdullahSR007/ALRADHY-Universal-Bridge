@@ -62,6 +62,27 @@ jobs:
           assert 'Connect ($stage): ' in s, "Remote failure stage missing"
           print("Android TV Remote v2 wire handshake static checks passed")
           PY
+      - name: Validate browser relay, trusted consent and Arabic
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          k=Path("app/src/main/java/com/alradhy/universalbridge/BridgeCore.kt").read_text()
+          w=Path("app/src/main/assets/web/index.html").read_text()
+          for name in ["status", "key", "text", "live", "direct/end"]:
+              assert '"/api/remote/'+name+'"' in k, "Missing browser relay endpoint: "+name
+          assert "AtvWifiRemote.key" in k and "AtvWifiRemote.text" in k
+          assert "rememberBrowser(token,p.client,expiry)" in k
+          assert "approvedBrowser(token,now)" in k
+          assert "BridgeRuntime.forgetSession(token)" in k
+          assert '"expiresAt"' in k and "BROWSER_TRUST_MS" in k
+          assert "localStorage.setItem(tokenKey,t)" in w
+          assert "remoteApi('key')" in w and "remoteApi('text')" in w
+          assert "remoteApi('live')" in w
+          assert "nativeAdvancedControls" in w and "browserRelayHelp" in w
+          assert "application/json; charset=UTF-8" in w
+          print("Browser -> tablet Wi-Fi Remote relay checks passed")
+          PY
       - name: Build mobile and TV APK
         run: gradle --no-daemon --stacktrace :app:assembleMobileDebug :app:assembleTvDebug
       - name: Package and SHA256
@@ -69,14 +90,14 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p dist
-          cp app/build/outputs/apk/mobile/debug/app-mobile-debug.apk dist/ALRADHY-Universal-Bridge-Mobile-v0.2.5.apk
-          cp app/build/outputs/apk/tv/debug/app-tv-debug.apk dist/ALRADHY-Universal-Bridge-TV-v0.2.5.apk
+          cp app/build/outputs/apk/mobile/debug/app-mobile-debug.apk dist/ALRADHY-Universal-Bridge-Mobile-v0.2.6.apk
+          cp app/build/outputs/apk/tv/debug/app-tv-debug.apk dist/ALRADHY-Universal-Bridge-TV-v0.2.6.apk
           (cd dist && sha256sum *.apk > SHA256SUMS.txt)
-          printf '{"repository":"AbdullahSR007/ALRADHY-Universal-Bridge","branch":"%s","commitSha":"%s","runId":"%s","version":"0.2.5","signing":"debug-key; NOT stable for updates"}\n' "$GITHUB_REF_NAME" "$GITHUB_SHA" "$GITHUB_RUN_ID" > dist/build-info.json
+          printf '{"repository":"AbdullahSR007/ALRADHY-Universal-Bridge","branch":"%s","commitSha":"%s","runId":"%s","version":"0.2.6","signing":"debug-key; NOT stable for updates"}\n' "$GITHUB_REF_NAME" "$GITHUB_SHA" "$GITHUB_RUN_ID" > dist/build-info.json
       - name: Upload verified build outputs
         uses: actions/upload-artifact@v4
         with:
-          name: ALRADHY-Universal-Bridge-v0.2.5
+          name: ALRADHY-Universal-Bridge-v0.2.6
           path: dist/*
           if-no-files-found: error
           retention-days: 14
