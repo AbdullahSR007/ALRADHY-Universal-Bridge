@@ -34,6 +34,22 @@ jobs:
         run: |
           python3 -c "from pathlib import Path; s=Path('app/src/main/assets/web/index.html').read_text(); Path('/tmp/bridge-web.js').write_text(s.split('<script>',1)[1].split('</script>',1)[0])"
           node --check /tmp/bridge-web.js
+      - name: Verify Unicode transport regression guard
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          html=Path("app/src/main/assets/web/index.html").read_text(encoding="utf-8")
+          core=Path("app/src/main/java/com/alradhy/universalbridge/BridgeCore.kt").read_text(encoding="utf-8")
+          assert "application/json; charset=UTF-8" in html, "Missing UTF-8 request charset"
+          assert "/api/native/echo" in core, "Native Unicode round-trip check missing"
+          sample="بسم الله الرحمن الرحيم — اختبار العربية ١٢٣"
+          import json
+          body=json.dumps({"text":sample},ensure_ascii=False).encode("utf-8")
+          assert json.loads(body.decode("utf-8"))["text"]==sample, "Unicode round trip failed"
+          print("Unicode transport regression checks passed")
+          PY
       - name: Build mobile and TV APK
         run: gradle --no-daemon --stacktrace :app:assembleMobileDebug :app:assembleTvDebug
       - name: Package and SHA256
@@ -41,14 +57,14 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p dist
-          cp app/build/outputs/apk/mobile/debug/app-mobile-debug.apk dist/ALRADHY-Universal-Bridge-Mobile-v0.2.0.apk
-          cp app/build/outputs/apk/tv/debug/app-tv-debug.apk dist/ALRADHY-Universal-Bridge-TV-v0.2.0.apk
+          cp app/build/outputs/apk/mobile/debug/app-mobile-debug.apk dist/ALRADHY-Universal-Bridge-Mobile-v0.2.1.apk
+          cp app/build/outputs/apk/tv/debug/app-tv-debug.apk dist/ALRADHY-Universal-Bridge-TV-v0.2.1.apk
           (cd dist && sha256sum *.apk > SHA256SUMS.txt)
-          printf '{"repository":"AbdullahSR007/ALRADHY-Universal-Bridge","branch":"%s","commitSha":"%s","runId":"%s","version":"0.2.0","signing":"debug-key; NOT stable for updates"}\n' "$GITHUB_REF_NAME" "$GITHUB_SHA" "$GITHUB_RUN_ID" > dist/build-info.json
+          printf '{"repository":"AbdullahSR007/ALRADHY-Universal-Bridge","branch":"%s","commitSha":"%s","runId":"%s","version":"0.2.1","signing":"debug-key; NOT stable for updates"}\n' "$GITHUB_REF_NAME" "$GITHUB_SHA" "$GITHUB_RUN_ID" > dist/build-info.json
       - name: Upload verified build outputs
         uses: actions/upload-artifact@v4
         with:
-          name: ALRADHY-Universal-Bridge-v0.2.0
+          name: ALRADHY-Universal-Bridge-v0.2.1
           path: dist/*
           if-no-files-found: error
           retention-days: 14

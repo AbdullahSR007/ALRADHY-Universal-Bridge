@@ -253,7 +253,7 @@ class BridgeHttpServer(private val app: Context) : NanoHTTPD(PORT) {
                 return reply(Response.Status.OK, okay(
                     "name" to "ALRADHY Universal Bridge",
                     "platform" to if (BuildConfig.FLAVOR == "tv") "Android TV" else "Android",
-                    "version" to "0.2.0",
+                    "version" to "0.2.1",
                     "accessibility" to (BridgeAccessibilityService.instance != null),
                     "imeReady" to BridgeImeService.isReady(),
                     "root" to BridgeRuntime.rootEnabled,
@@ -261,6 +261,18 @@ class BridgeHttpServer(private val app: Context) : NanoHTTPD(PORT) {
                 ))
             }
             val obj: JSONObject = if (s.method == Method.POST) {
+                // NanoHTTPD 2.3.1 defaults to ASCII when charset is omitted.
+                // Reject unsafe text requests rather than silently corrupt Arabic.
+                val textRoute = path in setOf(
+                    "/api/native/text", "/api/native/live", "/api/native/echo",
+                    "/api/text", "/api/clipboard", "/api/keyboard"
+                )
+                if (textRoute) {
+                    val contentType = s.headers["content-type"].orEmpty()
+                    if (!contentType.contains("charset=utf-8", ignoreCase = true))
+                        return error(Response.Status.BAD_REQUEST,
+                            "UTF-8 required: Content-Type must be application/json; charset=UTF-8")
+                }
                 val len = s.headers["content-length"]?.toLongOrNull() ?: 0L
                 if (len > 18000L) return error(Response.Status.BAD_REQUEST, "Request too large")
                 val parsed = HashMap<String, String>()
@@ -313,6 +325,18 @@ class BridgeHttpServer(private val app: Context) : NanoHTTPD(PORT) {
                 "/api/native/key" -> {
                     if (BuildConfig.FLAVOR!="mobile") return error(Response.Status.FORBIDDEN,"Mobile only")
                     reply(Response.Status.OK,okay("result" to AtvWifiRemote.key(obj.optString("key"))))
+                }
+                "/api/native/echo" -> {
+                    if (s.method != Method.POST)
+                        return error(Response.Status.BAD_REQUEST, "POST required")
+                    if (BuildConfig.FLAVOR != "mobile")
+                        return error(Response.Status.FORBIDDEN, "Mobile only")
+                    val sample = obj.optString("text", "")
+                    if (sample.length !in 1..256)
+                        return error(Response.Status.BAD_REQUEST, "Sample too long")
+                    reply(Response.Status.OK, okay("echo" to sample, "unicode" to true,
+                        "length" to sample.length,
+                        "codePoints" to sample.codePointCount(0, sample.length)))
                 }
                 "/api/native/text" -> {
                     if (BuildConfig.FLAVOR!="mobile") return error(Response.Status.FORBIDDEN,"Mobile only")
@@ -610,7 +634,7 @@ class MainActivity : Activity() {
         scroller.addView(container)
         setContentView(scroller)
         container.addView(label("ALRADHY\nUNIVERSAL BRIDGE", 28f))
-        container.addView(label("Local-first • Trusted Wi-Fi only • v0.2.0", 14f))
+        container.addView(label("Local-first • Trusted Wi-Fi only • v0.2.1", 14f))
         statusText = label("")
         container.addView(statusText)
         container.addView(label("Security: This prototype uses unencrypted local HTTP. Never share passwords or sensitive text.", 13f))
