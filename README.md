@@ -34,3 +34,11 @@ The TV APK no longer declares Accessibility or IME services (nor SMS/notificatio
 - Do NOT use `input text`: it is unreliable for Arabic/Unicode. Shell arguments never contain user-provided clipboard text.
 - User must **focus an editable text field on the TV first**. We cannot claim that the receiving app accepted the paste without Accessibility; the acknowledgement is `paste_key_sent` (not `inserted`). Some password/secure apps deny paste. If root or the key event is unavailable, the clipboard remains updated for manual paste.
 - Same TV safe manifest without Accessibility or IME permissions; no Play Protect bypass. LAN HTTP is unencrypted. Do not send secrets.
+
+## v0.1.4 — Dual keyboard workflows (Send + Direct)
+- **إرسال** / Send: sends the entire textbox via IME commitText when ALRADHY Bridge Keyboard is active; otherwise falls back to existing clipboard/root paste, reporting a distinct result.
+- **مباشر** / Direct: live keystroke stream from paired phone/tablet/browser into the focused TV editor; handles Unicode Arabic/English, Delete, Enter, arrows. A separate entry field intentionally clears between committed input events to avoid duplicate characters during composition.
+- **One-time TV setup**: enable **ALRADHY Bridge Keyboard** in Android Settings > Languages & input > Current keyboard and select it; then focus the desired TV input field. This is an independent optional IME and does not modify the installed ALRADHY-KB application. Switch back to ALRADHY-KB using the Android keyboard picker when finished.
+- **Root alone is insufficient for reliable Arabic**; standard shell `input text` or `input keyevent PASTE` cannot guarantee Unicode direct entry. The official InputConnection.commitText is used for actual focused field edits.
+- Neither the TV nor mobile manifest declares Accessibility/notification listener/SMS permissions. TV declares the official BIND_INPUT_METHOD protected service only. Play Protect behavior cannot be guaranteed.
+- Remote text is blocked for password fields, and all bridge traffic still uses unencrypted HTTP on trusted LAN. Never submit secrets.

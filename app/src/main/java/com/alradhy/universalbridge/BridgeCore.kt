@@ -246,8 +246,9 @@ class BridgeHttpServer(private val app: Context) : NanoHTTPD(PORT) {
                 return reply(Response.Status.OK, okay(
                     "name" to "ALRADHY Universal Bridge",
                     "platform" to if (BuildConfig.FLAVOR == "tv") "Android TV" else "Android",
-                    "version" to "0.1.3",
+                    "version" to "0.1.4",
                     "accessibility" to (BridgeAccessibilityService.instance != null),
+                    "imeReady" to BridgeImeService.isReady(),
                     "root" to BridgeRuntime.rootEnabled
                 ))
             }
@@ -286,6 +287,7 @@ class BridgeHttpServer(private val app: Context) : NanoHTTPD(PORT) {
                         "devices" to devices, "clipboard" to BridgeRuntime.lastClipboard,
                         "revision" to BridgeRuntime.clipboardRevision,
                         "accessibility" to (BridgeAccessibilityService.instance != null),
+                        "imeReady" to BridgeImeService.isReady(),
                         "root" to BridgeRuntime.rootEnabled
                     ))
                 }
@@ -303,13 +305,38 @@ class BridgeHttpServer(private val app: Context) : NanoHTTPD(PORT) {
                     val text = obj.optString("text", "")
                     if (text.isEmpty() || text.length > 12000)
                         return error(Response.Status.BAD_REQUEST, "Text must be 1-12000 chars")
-                    val delivery = BridgeRuntime.pasteToFocusedField(app, text)
-                    reply(Response.Status.OK, okay(
-                        "delivery" to delivery.first,
-                        "message" to delivery.second,
-                        "unicode" to true,
-                        "pasteVerified" to false
-                    ))
+                    val direct = if (BridgeImeService.isReady()) BridgeImeService.remoteEdit("type", text)
+                                 else Pair(false, "IME not ready")
+                    if (direct.first) {
+                        reply(Response.Status.OK, okay(
+                            "delivery" to "ime",
+                            "message" to direct.second,
+                            "unicode" to true,
+                            "inputConnectionAccepted" to true
+                        ))
+                    } else {
+                        val delivery = BridgeRuntime.pasteToFocusedField(app, text)
+                        reply(Response.Status.OK, okay(
+                            "delivery" to delivery.first,
+                            "message" to delivery.second,
+                            "unicode" to true,
+                            "inputConnectionAccepted" to false
+                        ))
+                    }
+                }
+                "/api/keyboard" -> {
+                    if (s.method != Method.POST) return error(Response.Status.BAD_REQUEST, "POST expected")
+                    if (BuildConfig.FLAVOR != "tv") return error(Response.Status.FORBIDDEN, "TV receiver only")
+                    val op = obj.optString("op", "")
+                    val inserted = obj.optString("text", "")
+                    if (op !in setOf("type", "backspace", "enter", "left", "right"))
+                        return error(Response.Status.BAD_REQUEST, "Invalid keyboard operation")
+                    if (inserted.length > 256 || (op == "type" && inserted.isEmpty()))
+                        return error(Response.Status.BAD_REQUEST, "Invalid text length")
+                    val response = BridgeImeService.remoteEdit(op, inserted)
+                    if (response.first) reply(Response.Status.OK, okay(
+                        "accepted" to true, "message" to response.second))
+                    else error(Response.Status.FORBIDDEN, response.second)
                 }
                 "/api/key" -> {
                     if (s.method != Method.POST) return error(Response.Status.BAD_REQUEST, "POST expected")
@@ -367,30 +394,108 @@ class BridgeAccessibilityService : AccessibilityService() {
 }
 
 class BridgeImeService : InputMethodService() {
+    @Volatile private var inputStarted = false
+
     companion object {
         @Volatile var instance: BridgeImeService? = null
-        fun commitFromRemote(text: String): Boolean {
+
+        fun isReady(): Boolean {
             val ime = instance ?: return false
+            return ime.inputStarted && ime.currentInputConnection != null
+        }
+
+        /**
+         * Must be enabled by the user as the TV's current Android input method.
+         * This uses InputConnection so Arabic/mixed Unicode is not shell-escaped
+         * and is committed to the ACTUAL focused editor, not to the clipboard.
+         */
+        fun remoteEdit(op: String, text: String = ""): Pair<Boolean, String> {
+            val ime = instance ?: return Pair(false, "Select ALRADHY Bridge Keyboard in Android TV input method settings first")
+            if (!ime.inputStarted) return Pair(false, "Open and focus a text field on TV while ALRADHY Bridge Keyboard is selected")
             val latch = CountDownLatch(1)
-            var success = false
+            var succeeded = false
+            var details = "No active editor"
             MAIN.post {
-                success = try { ime.currentInputConnection?.commitText(text, 1) ?: false }
-                    catch (_: Exception) { false }
-                latch.countDown()
+                try {
+                    val conn = ime.currentInputConnection
+                    if (conn == null || !ime.inputStarted) {
+                        details = "Input field is no longer focused"
+                    } else {
+                        val info = ime.currentInputEditorInfo
+                        val inputType = info?.inputType ?: 0
+                        val kind = inputType and android.text.InputType.TYPE_MASK_CLASS
+                        val variation = inputType and android.text.InputType.TYPE_MASK_VARIATION
+                        val secureField = (kind == android.text.InputType.TYPE_CLASS_TEXT &&
+                            (variation == android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD ||
+                             variation == android.text.InputType.TYPE_TEXT_VARIATION_WEB_PASSWORD ||
+                             variation == android.text.InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD)) ||
+                            (kind == android.text.InputType.TYPE_CLASS_NUMBER &&
+                             variation == android.text.InputType.TYPE_NUMBER_VARIATION_PASSWORD)
+                        if (secureField) {
+                            details = "Remote input is disabled in password fields"
+                        } else {
+                            succeeded = when (op) {
+                                "type" -> text.isNotEmpty() && text.length <= 12000 && conn.commitText(text, 1)
+                                "backspace" -> {
+                                    conn.deleteSurroundingTextInCodePoints(1, 0) ||
+                                        (conn.sendKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DEL)) &&
+                                         conn.sendKeyEvent(KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_DEL)))
+                                }
+                                "enter" -> {
+                                    val action = info?.imeOptions?.and(android.view.inputmethod.EditorInfo.IME_MASK_ACTION)
+                                        ?: android.view.inputmethod.EditorInfo.IME_ACTION_NONE
+                                    if (action != android.view.inputmethod.EditorInfo.IME_ACTION_NONE &&
+                                        action != android.view.inputmethod.EditorInfo.IME_ACTION_UNSPECIFIED)
+                                        conn.performEditorAction(action)
+                                    else conn.commitText("\n", 1)
+                                }
+                                "left", "right" -> {
+                                    val code = if (op == "left") KeyEvent.KEYCODE_DPAD_LEFT else KeyEvent.KEYCODE_DPAD_RIGHT
+                                    val down = conn.sendKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, code))
+                                    val up = conn.sendKeyEvent(KeyEvent(KeyEvent.ACTION_UP, code))
+                                    down && up
+                                }
+                                else -> false
+                            }
+                            details = if (succeeded) "Android InputConnection accepted the edit request"
+                                      else "Focused editor rejected the edit request"
+                        }
+                    }
+                } catch (_: Exception) {
+                    details = "Input method error; try focusing the TV text field again"
+                } finally {
+                    latch.countDown()
+                }
             }
-            latch.await(1500, TimeUnit.MILLISECONDS)
-            return success
+            if (!latch.await(2000, TimeUnit.MILLISECONDS)) return Pair(false, "Input method timed out")
+            return Pair(succeeded, details)
         }
     }
-    override fun onCreate() { super.onCreate(); instance = this }
-    override fun onDestroy() { if (instance === this) instance = null; super.onDestroy() }
+
+    override fun onCreate() {
+        super.onCreate()
+        instance = this
+    }
+    override fun onStartInput(attribute: android.view.inputmethod.EditorInfo?, restarting: Boolean) {
+        super.onStartInput(attribute, restarting)
+        inputStarted = true
+    }
+    override fun onFinishInput() {
+        inputStarted = false
+        super.onFinishInput()
+    }
+    override fun onDestroy() {
+        inputStarted = false
+        if (instance === this) instance = null
+        super.onDestroy()
+    }
     override fun onCreateInputView(): View {
         return TextView(this).apply {
-            text = "ALRADHY Keyboard • Input ready"
-            setPadding(22, 20, 22, 20)
-            setBackgroundColor(Color.rgb(17,23,34))
+            text = "ALRADHY Bridge Remote Keyboard ✓\nType from your paired tablet or browser"
+            setPadding(24, 16, 24, 16)
+            setBackgroundColor(Color.rgb(17, 23, 34))
             setTextColor(Color.WHITE)
-            textSize = 17f
+            textSize = 16f
         }
     }
 }
@@ -406,7 +511,9 @@ class MainActivity : Activity() {
                 statusText.text = (if (BridgeRuntime.server != null) "● Bridge online" else "○ Bridge offline") +
                     "\nhttp://" + BridgeRuntime.localIp() + ":" + PORT +
                     "\nPairing PIN: " + BridgeRuntime.pairingPin +
-                    "\nConnected sessions: " + BridgeRuntime.sessions.size
+                    "\nConnected sessions: " + BridgeRuntime.sessions.size +
+                    (if (BuildConfig.FLAVOR == "tv") "\nRemote Keyboard: " +
+                        (if (BridgeImeService.isReady()) "Ready ✓" else "Not active (choose Bridge Keyboard & focus a text field)") else "")
             }
             checkPending()
             handler.postDelayed(this, 1500)
@@ -444,7 +551,7 @@ class MainActivity : Activity() {
         scroller.addView(container)
         setContentView(scroller)
         container.addView(label("ALRADHY\nUNIVERSAL BRIDGE", 28f))
-        container.addView(label("Local-first • Trusted Wi-Fi only • v0.1.3", 14f))
+        container.addView(label("Local-first • Trusted Wi-Fi only • v0.1.4", 14f))
         statusText = label("")
         container.addView(statusText)
         container.addView(label("Security: This prototype uses unencrypted local HTTP. Never share passwords or sensitive text.", 13f))
@@ -475,7 +582,14 @@ class MainActivity : Activity() {
             }
         }
         if (BuildConfig.FLAVOR == "tv") {
-        container.addView(label("TV Safe Mode: no Accessibility or IME services requested. Remote navigation requires opt-in Root Remote on your own TV; incoming text is copied to the clipboard.", 14f))
+        container.addView(label("Bridge Remote Keyboard: choose it once as Android TV input method. This allows Arabic/English typing directly in a focused field. You can switch back to ALRADHY-KB anytime.", 14f))
+        button("1 · Enable ALRADHY Bridge Keyboard in Android Settings") {
+            startActivity(Intent(Settings.ACTION_INPUT_METHOD_SETTINGS))
+        }
+        button("2 · Select TV Keyboard (choose ALRADHY Bridge Keyboard)") {
+            (getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager).showInputMethodPicker()
+        }
+        container.addView(label("IME Ready: requires ALRADHY Bridge Keyboard selected AND a text field focused. Root Remote continues to control TV arrows independently.", 13f))
         button(if (BridgeRuntime.rootEnabled) "Root Remote: ON (tap to disable)" else "Root Remote: OFF (tap to opt in)") {
             val next = !BridgeRuntime.rootEnabled
             AlertDialog.Builder(this)
