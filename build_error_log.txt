@@ -1,9 +1,9 @@
-build	Grant execute permission for gradlew	﻿2026-11-12T06:25:30.6294763Z ##[group]Run chmod +x gradlew
-build	Grant execute permission for gradlew	2026-11-12T06:25:30.6295749Z ^[[36;1mchmod +x gradlew^[[0m
-build	Grant execute permission for gradlew	2026-11-12T06:25:30.6317940Z shell: /usr/bin/bash -e {0}
-build	Grant execute permission for gradlew	2026-11-12T06:25:30.6318834Z env:
-build	Grant execute permission for gradlew	2026-11-12T06:25:30.6319791Z   JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.21-9/x64
-build	Grant execute permission for gradlew	2026-11-12T06:25:30.6321734Z   JAVA_HOME_17_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.21-9/x64
-build	Grant execute permission for gradlew	2026-11-12T06:25:30.6323109Z ##[endgroup]
-build	Grant execute permission for gradlew	2026-11-12T06:25:30.6435677Z chmod: cannot access 'gradlew': No such file or directory
-build	Grant execute permission for gradlew	2026-11-12T06:25:30.6449799Z ##[error]Process completed with exit code 1.
+build	Grant execute permission for gradlew	﻿2026-11-12T06:50:10.7691333Z ##[group]Run chmod +x gradlew
+build	Grant execute permission for gradlew	2026-11-12T06:50:10.7693374Z ^[[36;1mchmod +x gradlew^[[0m
+build	Grant execute permission for gradlew	2026-11-12T06:50:10.7729449Z shell: /usr/bin/bash -e {0}
+build	Grant execute permission for gradlew	2026-11-12T06:50:10.7730591Z env:
+build	Grant execute permission for gradlew	2026-11-12T06:50:10.7731901Z   JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.21-9/x64
+build	Grant execute permission for gradlew	2026-11-12T06:50:10.7734061Z   JAVA_HOME_17_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.21-9/x64
+build	Grant execute permission for gradlew	2026-11-12T06:50:10.7735787Z ##[endgroup]
+build	Grant execute permission for gradlew	2026-11-12T06:50:10.7867563Z chmod: cannot access 'gradlew': No such file or directory
+build	Grant execute permission for gradlew	2026-11-12T06:50:10.7879230Z ##[error]Process completed with exit code 1.
