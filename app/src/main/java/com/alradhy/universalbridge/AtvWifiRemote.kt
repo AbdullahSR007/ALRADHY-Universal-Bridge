@@ -215,7 +215,7 @@ private class TvSocket(
     fun read()=Fields(socket.inputStream.frame())
     fun close()=runCatching{socket.close()}
 }
-private class RemoteSession(val ssl:TvSocket,val ime:Boolean) {
+private class RemoteSession(val ssl:TvSocket,val ime:Boolean, val onFailure:(String)->Unit = {}) {
     @Volatile var ready=false
     @Volatile var closed=false
     @Volatile var imeCounter=0
@@ -256,11 +256,13 @@ private class RemoteSession(val ssl:TvSocket,val ime:Boolean) {
                             if(imeCounter==0)imeCounter=(state?.n(1)?:0).toInt()
                             if(fieldCounter==0)fieldCounter=(state?.n(2)?:0).toInt()
                         }
-                        msg.has(40) -> {ready=true;latch.countDown()}
+                        msg.has(40) -> {ssl.socket.soTimeout=0;ready=true;latch.countDown()}
                         msg.has(3) -> throw IllegalStateException("TV remote protocol rejected a message")
                     }
                 }
-            }catch(_:Exception){}finally{
+            }catch(ex:Exception){
+                if(!closed)onFailure(ex.message ?: "Native remote disconnected")
+            }finally{
                 closed=true;ready=false;latch.countDown();ssl.close()
             }
         },"alradhy-tv-v2-"+if(ime)"ime" else "keys").apply{isDaemon=true;start()}
@@ -380,7 +382,10 @@ object AtvWifiRemote {
         if(keys?.ready==true)return "Already connected"
         keys?.close()
         val pin=prefs().getString(pinsPrefix+host,null)?:error("TV not paired")
-        val session=RemoteSession(TvSocket(identity(),host,6466,pin),false)
+        val session=RemoteSession(TvSocket(identity(),host,6466,pin),false) { err ->
+            lastError="Wi-Fi Remote connection closed: "+err.take(160)
+            phase="connection_lost"
+        }
         session.start()
         keys=session;phase="connected";lastError=""
         prefs().edit().putString("last_tv_ip",host).apply()
@@ -400,7 +405,9 @@ object AtvWifiRemote {
         require(host.isNotBlank()&&prefs().contains(pinsPrefix+host)){"Pair your TV first"}
         if(input?.ready!=true){
             input?.close()
-            input=RemoteSession(TvSocket(identity(),host,6466,prefs().getString(pinsPrefix+host,null)),true).also{it.start()}
+            input=RemoteSession(TvSocket(identity(),host,6466,prefs().getString(pinsPrefix+host,null)),true) { err ->
+                lastError="TV text channel closed: "+err.take(160)
+            }.also{it.start()}
         }
         input!!.text(text)
         if(!live) {
