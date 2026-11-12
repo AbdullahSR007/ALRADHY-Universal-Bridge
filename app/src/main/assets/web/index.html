@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ALRADHY Universal Bridge</title>
+<style>
+:root{--bg:#080b12;--surface:#111722;--raised:#18202d;--primary:#4f7cff;--purple:#845ef7;--green:#20c997;--red:#ff5d6c;--text:#f5f7fa;--muted:#98a2b3;--border:#293241; font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+*{box-sizing:border-box}body{margin:0;color:var(--text);background:radial-gradient(ellipse at 60% -10%,#1a2851 0,transparent 44%),var(--bg);min-height:100vh}
+a{color:#8eabff}.wrap{max-width:1440px;margin:auto;padding:24px}.header{display:flex;gap:20px;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);padding-bottom:19px}.brand{display:flex;gap:14px;align-items:center}.logo{display:grid;place-items:center;font-weight:900;font-size:38px;color:#9bb8ff;width:62px;height:62px;border:2px solid #6789ff;border-radius:20px;box-shadow:0 0 25px #4f7cff55;line-height:1}
+h1,h2,h3,p{margin:0}.brand h1{font-size:24px;letter-spacing:3px}.brand p,.subtitle{color:var(--muted);font-size:13px;margin-top:6px}h2{font-size:20px;margin-bottom:14px}h3{font-size:16px}.badge{border:1px solid #28644e;border-radius:100px;color:var(--green);padding:8px 12px;font-size:13px}.hero{display:flex;justify-content:space-between;align-items:center;gap:20px;margin:25px 0;flex-wrap:wrap}.hero h2{font-size:26px;margin-bottom:8px}.hero p{color:var(--muted)}.security{border-inline-start:3px solid #ffb020;background:#ffb0200d;color:#ebc58c;padding:12px 16px;margin:16px 0;border-radius:7px;font-size:13px}
+.grid{display:grid;grid-template-columns:minmax(270px,.95fr) minmax(320px,1.15fr) minmax(270px,.95fr);gap:18px}.stack{display:grid;gap:18px}.card{border:1px solid var(--border);border-radius:18px;background:linear-gradient(160deg,#162034ee,#101621);padding:22px;box-shadow:0 12px 35px #0004}.card small{color:var(--muted)}.muted{color:var(--muted)}button{font:inherit;background:#1b2944;border:1px solid #304563;border-radius:11px;padding:11px 14px;color:var(--text);cursor:pointer;transition:.15s;min-height:44px}button:hover{background:#304578;border-color:#6f94ff}button:active{transform:scale(.97)}button.primary{background:linear-gradient(105deg,#3579ff,#4164ed);border:none}button.danger{background:#452332;color:#ffc0c0;border-color:#773c52}input,textarea{font:inherit;color:var(--text);background:#080f1e;border:1px solid #35455f;border-radius:11px;padding:12px;width:100%;outline:none;direction:auto}input:focus,textarea:focus{border-color:#4f7cff}textarea{min-height:105px;resize:vertical}.rows{display:flex;gap:9px;flex-wrap:wrap}.rows>*{flex:1}.statrow{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:15px}.stat{border:1px solid var(--border);border-radius:12px;padding:12px;text-align:center;background:#0e1523}.stat b{display:block;font-size:23px;color:#b2c5ff}.stat span{font-size:11px;color:var(--muted)}.dpad{display:grid;grid-template-columns:repeat(3,70px);grid-template-rows:repeat(3,62px);gap:9px;justify-content:center;margin:18px auto}.dpad button{font-size:23px;background:#172542;border-radius:16px}.dpad .ok{border-radius:50%;background:#3b6cf5}.remotehead{display:flex;justify-content:space-between;align-items:center}.statusdot{height:9px;width:9px;background:var(--green);display:inline-block;border-radius:50%;margin-inline:8px}.controls{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:12px}.controls button{font-size:14px;padding:10px 4px}.logline{padding:10px 0;border-bottom:1px solid #273246;color:var(--muted);font-size:13px}.logline strong{color:var(--text);display:block}.history{max-height:180px;overflow:auto}.toolbar{display:flex;gap:10px;align-items:center}.toolbar>*{flex:1}.auth{position:fixed;inset:0;background:#050810e8;display:grid;place-items:center;z-index:10;padding:24px}.authpanel{max-width:470px;width:100%;border:1px solid #395185;background:linear-gradient(145deg,#1a2440,#10151f);border-radius:22px;padding:28px;box-shadow:0 25px 80px #000a}.authpanel h2{font-size:24px}.authpanel p{color:var(--muted);line-height:1.7;margin:10px 0 18px}.authpanel input{margin:6px 0 13px}.code{font-size:27px;letter-spacing:9px;text-align:center;direction:ltr}.hide{display:none!important}.feedback{padding:11px 0;min-height:20px;font-size:13px;color:var(--green)}.foot{color:#68748a;text-align:center;margin:28px 0;font-size:12px}.section-note{font-size:12px;color:var(--muted);margin-top:11px;line-height:1.8}
+@media(max-width:1060px){.grid{grid-template-columns:1fr 1fr}.grid>.stack:last-child{grid-column:1/-1}.hero h2{font-size:22px}}
+@media(max-width:680px){.wrap{padding:15px}.header{align-items:flex-start}.brand h1{font-size:18px}.logo{width:49px;height:49px;font-size:31px}.grid{grid-template-columns:1fr}.grid>.stack:last-child{grid-column:auto}.card{padding:17px}.dpad{grid-template-columns:repeat(3,66px)}.hero{margin:19px 0}.statrow{gap:5px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="header"><div class="brand"><div class="logo">A</div><div><h1>ALRADHY</h1><p>UNIVERSAL BRIDGE · جسر واحد، كل أجهزتك</p></div></div><span class="badge" id="bridgeStatus">● Connecting...</span></header>
+<div class="hero"><div><h2>نصوصك، أجهزتك .. في مكان واحد</h2><p>Your Content. Your Devices. One Place.</p></div><div class="badge">v0.1.0 • Local First</div></div>
+<div class="security">نسخة تطوير: الاتصال المحلي HTTP غير مشفّر. استخدم شبكة منزلية موثوقة فقط، ولا ترسل كلمات مرور أو نصوصًا سرية. المزامنة يدويّة في هذه النسخة.</div>
+<div class="grid">
+<section class="stack">
+  <div class="card"><h2>الأجهزة والجلسات</h2><p class="subtitle">الأجهزة المتصلة بهذا الجسر</p><div class="statrow"><div class="stat"><b id="deviceCount">0</b><span>جلسات فعالة</span></div><div class="stat"><b id="accessState">—</b><span>Accessibility</span></div><div class="stat"><b id="rootState">—</b><span>Root Remote</span></div></div><div id="deviceList" class="history" style="margin-top:12px"></div><div class="section-note">يطلب كل جهاز جديد موافقةً صريحة من شاشة الجهاز المضيف.</div></div>
+  <div class="card"><h2>التحكم الآمن</h2><p class="section-note">Back وHome وD-pad يحتاجان Accessibility المفعّلة على التلفزيون، أو Root Remote باختيارك. زر التشغيل يحتاج Root وقد لا يعمل مع كل تلفزيون.</p><button class="danger" id="disconnect" style="margin-top:15px;width:100%">فصل جلستي الحالية</button></div>
+</section>
+<section class="stack">
+  <div class="card"><div class="remotehead"><h2>🎮 ريموت التلفزيون</h2><span class="muted" id="remoteState">جاهز</span></div><div class="controls"><button data-key="POWER">⏻ Power</button><button data-key="HOME">⌂ Home</button><button data-key="MENU">☰ Menu</button></div>
+    <div class="dpad"><span></span><button data-key="UP">▲</button><span></span><button data-key="RIGHT">▶</button><button data-key="OK" class="ok">OK</button><button data-key="LEFT">◀</button><span></span><button data-key="DOWN">▼</button><span></span></div>
+    <div class="controls"><button data-key="BACK">↩ Back</button><button data-key="PLAY_PAUSE">⏯ Play</button><button data-key="MUTE">◉ Mute</button><button data-key="VOL_DOWN">− Volume</button><button data-key="VOL_UP">+ Volume</button><button id="focusText">⌨ Keyboard</button></div><div id="remoteMsg" class="feedback"></div>
+    <p class="section-note">المفاتيح ترسل أمرًا واحدًا في كل ضغطة، مع رد واضح من الجهاز المضيف.</p>
+  </div>
+  <div class="card"><h2>⌨ لوحة إدخال النص</h2><textarea id="remoteText" placeholder="اكتب نصًا أو رابطًا ثم أرسله إلى الحقل النشط في التلفزيون..."></textarea><div class="rows" style="margin-top:9px"><button class="primary" id="sendText">إرسال النص</button><button id="clearText">مسح</button></div><p class="section-note">إذا لم تكن لوحة ALRADHY IME نشطة، سيُنسخ النص إلى حافظة الجهاز بدل إدخاله تلقائيًا.</p><div class="feedback" id="textMsg"></div></div>
+</section>
+<section class="stack">
+  <div class="card"><h2>📋 Clipboard Hub</h2><p class="subtitle">نسخ ونقل نصوص وروابط بين الأجهزة</p><h3 style="margin:19px 0 10px">النص المُستلم على الجسر</h3><textarea id="received" readonly placeholder="لم يصل نص بعد"></textarea><div class="rows" style="margin-top:9px"><button id="copyReceived">نسخ إلى هذا الجهاز</button><button id="refreshClipboard">تحديث</button></div><h3 style="margin:20px 0 10px">مشاركة نص جديد</h3><textarea id="clipboardText" placeholder="اكتب أو الصق النص هنا..."></textarea><div class="rows" style="margin-top:9px"><button id="browserPaste">لصق من الحافظة</button><button class="primary" id="sendClipboard">إرسال للجسر</button></div><div class="feedback" id="clipboardMsg"></div><p class="section-note">بعض المتصفحات، خصوصًا Safari على HTTP، تمنع Clipboard API. يمكنك دائمًا اللصق يدويًا في مربع النص.</p></div>
+  <div class="card"><h2>ℹ️ معلومات الجسر</h2><div class="logline"><strong>Protocol</strong>LAN HTTP prototype · No cloud</div><div class="logline"><strong>Pairing</strong>PIN + host approval</div><div class="logline"><strong>Session</strong>30 min inactivity expiry</div><div class="logline"><strong>Privacy</strong>Text stays on the host / LAN</div></div>
+</section>
+</div><footer class="foot">ALRADHY Universal Bridge · Designed for Android, Android TV and modern browsers · v0.1.0</footer>
+</div>
+
+<div class="auth" id="authScreen"><div class="authpanel"><div class="brand"><div class="logo">A</div><div><h2>اقتران آمن محليًا</h2><p>ALRADHY Universal Bridge</p></div></div><p>افتح التطبيق على الجهاز المضيف، ثم أدخل رمز الاقتران الظاهر على شاشته. بعد ذلك وافق من شاشة المضيف.</p>
+  <label>اسم هذا الجهاز</label><input id="clientName" maxlength="45" placeholder="iPhone / Windows PC / Samsung Tablet">
+  <label>رمز من 6 أرقام</label><input class="code" id="pairPin" type="text" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="000000">
+  <button id="startPair" class="primary" style="width:100%">طلب الاقتران</button><div class="feedback" id="pairMsg"></div><p class="section-note">مهم: هذا الاتصال غير مشفّر بعد، ولا ينبغي استخدامه على شبكة عامة.</p></div></div>
+
+<script>
+"use strict";
+const $=id=>document.getElementById(id), tokenKey='alradhy.bridge.token.'+location.host;
+let token=sessionStorage.getItem(tokenKey)||'', currentRevision=-1, pairingPoll=null;
+function say(id,text,good=true){$(id).textContent=text;$(id).style.color=good?'#20c997':'#ff9ba4'}
+async function request(path,method='GET',data=null,auth=true){
+  const headers={'Accept':'application/json'};
+  if(data!==null)headers['Content-Type']='application/json';
+  if(auth && token)headers['Authorization']='Bearer '+token;
+  const r=await fetch(path,{method,headers,body:data===null?undefined:JSON.stringify(data),cache:'no-store'});
+  let j;try{j=await r.json()}catch(e){throw Error('الاستجابة غير صالحة من الجسر')}
+  if(!r.ok||!j.ok){if(r.status===401){token='';sessionStorage.removeItem(tokenKey);$('authScreen').classList.remove('hide')}throw Error(j.error||('HTTP '+r.status))}
+  return j;
+}
+async function initialStatus(){
+  try {const s=await request('/api/status','GET',null,false);$('bridgeStatus').textContent='● '+s.platform+' · Online';$('accessState').textContent=s.accessibility?'ON':'OFF';$('rootState').textContent=s.root?'ON':'OFF';if(token){$('authScreen').classList.add('hide');await refresh()}}
+  catch(e){$('bridgeStatus').textContent='○ Connection Error';say('pairMsg',e.message,false)}
+}
+async function pair(){
+  const pin=$('pairPin').value.trim(),name=$('clientName').value.trim()||'Browser';
+  if(!/^\d{6}$/.test(pin)){say('pairMsg','أدخل 6 أرقام',false);return}
+  $('startPair').disabled=true;
+  try{
+    const p=await request('/api/pair/request','POST',{pin,name},false);
+    say('pairMsg','تم إرسال الطلب. وافق الآن من شاشة المضيف.');
+    const started=Date.now();
+    if(pairingPoll)clearInterval(pairingPoll);
+    pairingPoll=setInterval(async()=>{
+      try{
+        if(Date.now()-started>120000){clearInterval(pairingPoll);say('pairMsg','انتهت مهلة الاقتران',false);$('startPair').disabled=false;return}
+        const state=await request('/api/pair/status?id='+encodeURIComponent(p.requestId),'GET',null,false);
+        if(state.status==='approved' && state.token){
+          clearInterval(pairingPoll);pairingPoll=null;token=state.token;
+          sessionStorage.setItem(tokenKey,token);$('authScreen').classList.add('hide');$('startPair').disabled=false;await refresh();
+        } else if(state.status==='rejected'){clearInterval(pairingPoll);say('pairMsg','تم رفض الطلب من المضيف',false);$('startPair').disabled=false}
+      }catch(e){clearInterval(pairingPoll);say('pairMsg',e.message,false);$('startPair').disabled=false}
+    },1500);
+  }catch(e){say('pairMsg',e.message,false);$('startPair').disabled=false}
+}
+async function refresh(){
+  if(!token)return;
+  try {
+    const s=await request('/api/state');
+    $('deviceCount').textContent=s.devices.length;
+    $('accessState').textContent=s.accessibility?'ON':'OFF';
+    $('rootState').textContent=s.root?'ON':'OFF';
+    $('deviceList').replaceChildren();
+    s.devices.forEach(d=>{const el=document.createElement('div');el.className='logline';const title=document.createElement('strong');title.textContent=d.client;el.append(title,document.createTextNode(' paired session'));$('deviceList').appendChild(el)});
+    if(s.revision!==currentRevision){currentRevision=s.revision;$('received').value=s.clipboard||''}
+  }catch(e){say('remoteMsg',e.message,false)}
+}
+async function keySend(key){
+  say('remoteMsg','جارٍ إرسال '+key+' ...');
+  try {const r=await request('/api/key','POST',{key});say('remoteMsg',r.result||'تم إرسال الأمر')}
+  catch(e){say('remoteMsg','لم ينفذ الأمر: '+e.message,false)}
+}
+async function clipboardSend(target,text,path){
+  if(!text.trim()){say(target,'اكتب نصًا أولاً',false);return}
+  try{
+    const r=await request(path,'POST',{text});
+    if(path==='/api/text')say(target,r.delivery==='ime'?'تمت كتابة النص في الحقل النشط':r.delivery==='clipboard_only'?'تم نسخه إلى حافظة المضيف، افتح الحقل ثم الصقه':'تعذر توصيل النص',r.delivery!=='failed');
+    else{say(target,r.deliveredToClipboard?'تم نقل النص إلى حافظة الجهاز المضيف':'تم حفظ النص في الجسر، لكن لم تنجح الكتابة للحافظة',r.deliveredToClipboard);await refresh()}
+  }catch(e){say(target,e.message,false)}
+}
+document.querySelectorAll('[data-key]').forEach(b=>b.addEventListener('click',()=>keySend(b.dataset.key)));
+$('startPair').addEventListener('click',pair);
+$('pairPin').addEventListener('keydown',e=>{if(e.key==='Enter')pair()});
+$('sendText').addEventListener('click',()=>clipboardSend('textMsg',$('remoteText').value,'/api/text'));
+$('sendClipboard').addEventListener('click',()=>clipboardSend('clipboardMsg',$('clipboardText').value,'/api/clipboard'));
+$('clearText').addEventListener('click',()=>{$('remoteText').value=''});
+$('focusText').addEventListener('click',()=>{$('remoteText').focus();say('remoteMsg','اكتب النص في الحقل أسفل الريموت')});
+$('refreshClipboard').addEventListener('click',refresh);
+$('browserPaste').addEventListener('click',async()=>{try{if(!navigator.clipboard)throw Error('المتصفح يمنع قراءة الحافظة في HTTP');$('clipboardText').value=await navigator.clipboard.readText()}catch(e){say('clipboardMsg','ألصق النص يدويًا في المربع. '+e.message,false);$('clipboardText').focus()}});
+$('copyReceived').addEventListener('click',async()=>{const text=$('received').value;if(!text)return;try{if(!navigator.clipboard)throw Error('blocked');await navigator.clipboard.writeText(text);say('clipboardMsg','تم النسخ لحافظة هذا الجهاز')}catch(e){$('received').focus();$('received').select();say('clipboardMsg','المتصفح لا يسمح بالنسخ التلقائي؛ انسخ النص المحدد يدويًا',false)}});
+$('disconnect').addEventListener('click',async()=>{try{await request('/api/disconnect','POST',{})}catch(e){}token='';sessionStorage.removeItem(tokenKey);$('authScreen').classList.remove('hide')});
+initialStatus();setInterval(refresh,4000);
+</script></body></html>
