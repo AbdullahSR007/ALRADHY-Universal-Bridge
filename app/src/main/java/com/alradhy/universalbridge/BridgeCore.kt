@@ -132,6 +132,36 @@ object BridgeRuntime {
         } catch (_: Exception) { "127.0.0.1" }
     }
 
+    /**
+     * TV Safe Mode direct paste. Android clipboard handles Unicode including Arabic;
+     * never interpolate the payload into an Android shell command.
+     *
+     * KEYCODE_PASTE dispatch success is NOT proof that the target app accepted
+     * the text. Only a foreground focused editable field can consume this event.
+     */
+    fun pasteToFocusedField(context: Context, text: String): Pair<String, String> {
+        val copied = updateClipboard(context, text)
+        if (!copied) return Pair("failed", "Failed to put Unicode text on Android clipboard")
+        if (BuildConfig.FLAVOR != "tv" || !rootEnabled)
+            return Pair("clipboard_only", "Text copied to TV clipboard. Root Remote is disabled.")
+        return try {
+            val command = "input keyevent " + KeyEvent.KEYCODE_PASTE.toString()
+            // Constant command; no user data is passed to su, preserving Arabic text.
+            val process = ProcessBuilder("su", "-c", command).start()
+            val finished = process.waitFor(3, TimeUnit.SECONDS)
+            if (!finished) {
+                process.destroyForcibly()
+                Pair("clipboard_only", "Paste command timed out. Text remains on TV clipboard.")
+            } else if (process.exitValue() == 0) {
+                Pair("paste_key_sent", "Paste key sent to focused field (target acceptance cannot be verified)")
+            } else {
+                Pair("clipboard_only", "Paste key rejected by root. Text remains on TV clipboard.")
+            }
+        } catch (_: Exception) {
+            Pair("clipboard_only", "Paste key unavailable. Text remains on TV clipboard.")
+        }
+    }
+
     fun sendKey(context: Context, key: String): Pair<Boolean, String> {
         val actions = mapOf(
             "BACK" to AccessibilityService.GLOBAL_ACTION_BACK,
@@ -216,7 +246,7 @@ class BridgeHttpServer(private val app: Context) : NanoHTTPD(PORT) {
                 return reply(Response.Status.OK, okay(
                     "name" to "ALRADHY Universal Bridge",
                     "platform" to if (BuildConfig.FLAVOR == "tv") "Android TV" else "Android",
-                    "version" to "0.1.2",
+                    "version" to "0.1.3",
                     "accessibility" to (BridgeAccessibilityService.instance != null),
                     "root" to BridgeRuntime.rootEnabled
                 ))
@@ -273,10 +303,13 @@ class BridgeHttpServer(private val app: Context) : NanoHTTPD(PORT) {
                     val text = obj.optString("text", "")
                     if (text.isEmpty() || text.length > 12000)
                         return error(Response.Status.BAD_REQUEST, "Text must be 1-12000 chars")
-                    val typed = BridgeImeService.commitFromRemote(text)
-                    val copied = BridgeRuntime.updateClipboard(app, text)
-                    reply(Response.Status.OK, okay("delivery" to if (typed) "ime" else if (copied)
-                        "clipboard_only" else "failed"))
+                    val delivery = BridgeRuntime.pasteToFocusedField(app, text)
+                    reply(Response.Status.OK, okay(
+                        "delivery" to delivery.first,
+                        "message" to delivery.second,
+                        "unicode" to true,
+                        "pasteVerified" to false
+                    ))
                 }
                 "/api/key" -> {
                     if (s.method != Method.POST) return error(Response.Status.BAD_REQUEST, "POST expected")
@@ -411,7 +444,7 @@ class MainActivity : Activity() {
         scroller.addView(container)
         setContentView(scroller)
         container.addView(label("ALRADHY\nUNIVERSAL BRIDGE", 28f))
-        container.addView(label("Local-first • Trusted Wi-Fi only • v0.1.2", 14f))
+        container.addView(label("Local-first • Trusted Wi-Fi only • v0.1.3", 14f))
         statusText = label("")
         container.addView(statusText)
         container.addView(label("Security: This prototype uses unencrypted local HTTP. Never share passwords or sensitive text.", 13f))

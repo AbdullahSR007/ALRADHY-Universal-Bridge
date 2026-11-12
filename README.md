@@ -28,3 +28,9 @@ The mobile APK does not declare Accessibility or Android IME services. They are 
 
 ## v0.1.2 TV Safe Mode — Play Protect remediation
 The TV APK no longer declares Accessibility or IME services (nor SMS/notification-listener privileges). The mobile APK already omitted them. This responds to Google's documented internet-sideloading protection for APKs declaring ACCESSIBILITY. TV remote navigation now requires explicitly opted-in Root Remote on an owner-controlled TV; without root, clipboard-only and browser panel remain functional. Remote text goes to clipboard, not an input field. Keep Play Protect ON. Installation acceptance is controlled by Google; successful build does not guarantee acceptance. This prototype's HTTP transport is not encrypted and should not carry sensitive data. Debug signatures are not stable for upgrades.
+
+## v0.1.3 — Smart Unicode Paste (TV Safe Mode)
+- The tablet/browser Keyboard tab now uses `/api/text` to place the text (Arabic, English, mixed, spaces, emoji and newlines) in Android's clipboard and dispatch `KEYCODE_PASTE=279` using **only** the previously opt-in Root Remote on TV.
+- Do NOT use `input text`: it is unreliable for Arabic/Unicode. Shell arguments never contain user-provided clipboard text.
+- User must **focus an editable text field on the TV first**. We cannot claim that the receiving app accepted the paste without Accessibility; the acknowledgement is `paste_key_sent` (not `inserted`). Some password/secure apps deny paste. If root or the key event is unavailable, the clipboard remains updated for manual paste.
+- Same TV safe manifest without Accessibility or IME permissions; no Play Protect bypass. LAN HTTP is unencrypted. Do not send secrets.

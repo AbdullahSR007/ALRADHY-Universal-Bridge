@@ -16,12 +16,12 @@ h1,h2,h3,p{margin:0}.brand h1{font-size:24px;letter-spacing:3px}.brand p,.subtit
 <body>
 <div class="wrap">
 <header class="header"><div class="brand"><div class="logo">A</div><div><h1>ALRADHY</h1><p>UNIVERSAL BRIDGE · جسر واحد، كل أجهزتك</p></div></div><span class="badge" id="bridgeStatus">● Connecting...</span></header>
-<div class="hero"><div><h2>نصوصك، أجهزتك .. في مكان واحد</h2><p>Your Content. Your Devices. One Place.</p></div><div class="badge">v0.1.2 • Local First</div></div>
+<div class="hero"><div><h2>نصوصك، أجهزتك .. في مكان واحد</h2><p>Your Content. Your Devices. One Place.</p></div><div class="badge">v0.1.3 • Local First</div></div>
 <div class="security">نسخة تطوير: الاتصال المحلي HTTP غير مشفّر. استخدم شبكة منزلية موثوقة فقط، ولا ترسل كلمات مرور أو نصوصًا سرية. المزامنة يدويّة في هذه النسخة.</div>
 <div class="grid">
 <section class="stack">
   <div class="card"><h2>الأجهزة والجلسات</h2><p class="subtitle">الأجهزة المتصلة بهذا الجسر</p><div class="statrow"><div class="stat"><b id="deviceCount">0</b><span>جلسات فعالة</span></div><div class="stat"><b id="accessState">—</b><span>Accessibility</span></div><div class="stat"><b id="rootState">—</b><span>Root Remote</span></div></div><div id="deviceList" class="history" style="margin-top:12px"></div><div class="section-note">يطلب كل جهاز جديد موافقةً صريحة من شاشة الجهاز المضيف.</div></div>
-  <div class="card"><h2>التحكم الآمن</h2><p class="section-note">في نسخة TV Safe Mode، تحتاج أزرار Back وHome والأسهم تفعيل Root Remote يدويًا من التلفزيون. زر Power قد لا يعمل حسب الجهاز. الاتصال HTTP غير مشفّر.</p><button class="danger" id="disconnect" style="margin-top:15px;width:100%">فصل جلستي الحالية</button></div>
+  <div class="card"><h2>التحكم الآمن</h2><p class="section-note">TV Safe Mode: فعّل Root Remote يدويًا على التلفزيون للتحكم ولصق النص في الحقل النشط. التأكيد يعني إرسال أمر اللصق، وليس التحقق من ظهوره. الاتصال HTTP غير مشفّر.</p><button class="danger" id="disconnect" style="margin-top:15px;width:100%">فصل جلستي الحالية</button></div>
 </section>
 <section class="stack">
   <div class="card"><div class="remotehead"><h2>🎮 ريموت التلفزيون</h2><span class="muted" id="remoteState">جاهز</span></div><div class="controls"><button data-key="POWER">⏻ Power</button><button data-key="HOME">⌂ Home</button><button data-key="MENU">☰ Menu</button></div>
@@ -29,13 +29,13 @@ h1,h2,h3,p{margin:0}.brand h1{font-size:24px;letter-spacing:3px}.brand p,.subtit
     <div class="controls"><button data-key="BACK">↩ Back</button><button data-key="PLAY_PAUSE">⏯ Play</button><button data-key="MUTE">◉ Mute</button><button data-key="VOL_DOWN">− Volume</button><button data-key="VOL_UP">+ Volume</button><button id="focusText">⌨ Keyboard</button></div><div id="remoteMsg" class="feedback"></div>
     <p class="section-note">المفاتيح ترسل أمرًا واحدًا في كل ضغطة، مع رد واضح من الجهاز المضيف.</p>
   </div>
-  <div class="card"><h2>⌨ لوحة إدخال النص</h2><textarea id="remoteText" placeholder="اكتب نصًا أو رابطًا ثم أرسله إلى الحقل النشط في التلفزيون..."></textarea><div class="rows" style="margin-top:9px"><button class="primary" id="sendText">إرسال النص</button><button id="clearText">مسح</button></div><p class="section-note">إذا لم تكن لوحة ALRADHY IME نشطة، سيُنسخ النص إلى حافظة الجهاز بدل إدخاله تلقائيًا.</p><div class="feedback" id="textMsg"></div></div>
+  <div class="card"><h2>⌨ لوحة إدخال النص</h2><textarea id="remoteText" placeholder="اكتب بالعربية أو الإنجليزية. افتح خانة النص على التلفزيون ثم اضغط إرسال..."></textarea><div class="rows" style="margin-top:9px"><button class="primary" id="sendText" >لصق مباشر في التلفزيون</button><button id="clearText">مسح</button></div><p class="section-note">يلصق مباشرة في الحقل المفتوح باستخدام Root Remote. يدعم العربية والإنجليزية عبر حافظة Unicode. لا يمكن التأكد آليًا أن التطبيق المستهدف قبل اللصق، وقد يرفض حقول كلمات المرور.</p><div class="feedback" id="textMsg"></div></div>
 </section>
 <section class="stack">
   <div class="card"><h2>📋 Clipboard Hub</h2><p class="subtitle">نسخ ونقل نصوص وروابط بين الأجهزة</p><h3 style="margin:19px 0 10px">النص المُستلم على الجسر</h3><textarea id="received" readonly placeholder="لم يصل نص بعد"></textarea><div class="rows" style="margin-top:9px"><button id="copyReceived">نسخ إلى هذا الجهاز</button><button id="refreshClipboard">تحديث</button></div><h3 style="margin:20px 0 10px">مشاركة نص جديد</h3><textarea id="clipboardText" placeholder="اكتب أو الصق النص هنا..."></textarea><div class="rows" style="margin-top:9px"><button id="browserPaste">لصق من الحافظة</button><button class="primary" id="sendClipboard">إرسال للجسر</button></div><div class="feedback" id="clipboardMsg"></div><p class="section-note">بعض المتصفحات، خصوصًا Safari على HTTP، تمنع Clipboard API. يمكنك دائمًا اللصق يدويًا في مربع النص.</p></div>
   <div class="card"><h2>ℹ️ معلومات الجسر</h2><div class="logline"><strong>Protocol</strong>LAN HTTP prototype · No cloud</div><div class="logline"><strong>Pairing</strong>PIN + host approval</div><div class="logline"><strong>Session</strong>30 min inactivity expiry</div><div class="logline"><strong>Privacy</strong>Text stays on the host / LAN</div></div>
 </section>
-</div><footer class="foot">ALRADHY Universal Bridge · Designed for Android, Android TV and modern browsers · v0.1.2</footer>
+</div><footer class="foot">ALRADHY Universal Bridge · Designed for Android, Android TV and modern browsers · v0.1.3</footer>
 </div>
 
 <div class="auth" id="authScreen"><div class="authpanel"><div class="brand"><div class="logo">A</div><div><h2>اقتران آمن محليًا</h2><p>ALRADHY Universal Bridge</p></div></div><p>افتح التطبيق على الجهاز المضيف، ثم أدخل رمز الاقتران الظاهر على شاشته. بعد ذلك وافق من شاشة المضيف.</p>
@@ -103,7 +103,16 @@ async function clipboardSend(target,text,path){
   if(!text.trim()){say(target,'اكتب نصًا أولاً',false);return}
   try{
     const r=await request(path,'POST',{text});
-    if(path==='/api/text')say(target,r.delivery==='ime'?'تمت كتابة النص في الحقل النشط':r.delivery==='clipboard_only'?'تم نسخه إلى حافظة المضيف، افتح الحقل ثم الصقه':'تعذر توصيل النص',r.delivery!=='failed');
+    if(path==='/api/text') {
+      const message = r.delivery==='paste_key_sent'
+        ? '✓ تم إرسال أمر لصق النص إلى الحقل النشط على التلفزيون. إذا لم يظهر النص، اضغط على الحقل في التلفزيون وجرّب مجددًا.'
+        : r.delivery==='clipboard_only'
+          ? 'تم حفظ النص العربي/الإنجليزي في الحافظة فقط. فعّل Root Remote على التلفزيون، وافتح الحقل المطلوب ثم أعد الإرسال.'
+          : r.delivery==='ime'
+            ? 'تمت كتابة النص داخل الحقل.'
+            : 'تعذر توصيل النص.';
+      say(target,message,r.delivery!=='failed');
+    }
     else{say(target,r.deliveredToClipboard?'تم نقل النص إلى حافظة الجهاز المضيف':'تم حفظ النص في الجسر، لكن لم تنجح الكتابة للحافظة',r.deliveredToClipboard);await refresh()}
   }catch(e){say(target,e.message,false)}
 }
