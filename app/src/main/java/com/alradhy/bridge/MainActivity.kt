@@ -4,7 +4,6 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.os.Bundle
-import android.view.KeyEvent
 import android.webkit.JavascriptInterface
 import android.webkit.WebView
 import android.webkit.WebViewClient
@@ -45,7 +44,7 @@ class MainActivity : AppCompatActivity() {
                 </head>
                 <body>
                     <h1>ALRADHY Universal Bridge</h1>
-                    <div class="subtitle">نصوصك .. أجهزتك .. في مكان واحد</div>
+                    <div class="subtitle">النظام الموحد للجسر الذكي</div>
                     
                     <div class="card">
                         <h3 style="margin-top:0; color:#20C997;">مركز الحافظة المحلية</h3>
@@ -96,8 +95,8 @@ class MainActivity : AppCompatActivity() {
 
         @JavascriptInterface
         fun simulateKeyPress(keyCode: Int) {
-            val instrumentation = android.app.Instrumentation()
             try {
+                val instrumentation = android.app.Instrumentation()
                 Thread {
                     try {
                         instrumentation.sendKeyDownUpSync(keyCode)
