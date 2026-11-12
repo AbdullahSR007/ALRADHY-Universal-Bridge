@@ -55,3 +55,6 @@ Root cause: Bridge's web fetch() sent POST `Content-Type: application/json` **wi
 - A native TV Remote v2 session disables the seven-second handshake read timeout after activation to prevent disconnects during quiet periods.
 - Live typing attempts to stream Arabic composition input before the space bar, including prefix changes, using Unicode codepoint-safe deltas. Some sender keyboards may not emit their composition data before commit; those may still require pressing Space. Stop waits for queued edits.
 - Existing ALRADHY-KB on the TV remains untouched. No extra TV keyboard is registered by Bridge.
+
+## v0.2.3: Wi-Fi Remote now easy to find
+The mobile/tablet app displays **📡 فتح ريموت Wi-Fi الآن** at the top of its home screen. This always opens its own localhost-native Wi-Fi Remote, not the TV HTTP Bridge (which does not own the native TLS remote connection). The older other-Bridge button is relabeled **Clipboard only**. The dashboard shows a prominent Wi-Fi Remote navigation button with guidance when opened from the TV-hosted Bridge. Native connection status shows directly on the mobile main screen. ALRADHY-KB is untouched.

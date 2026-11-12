@@ -253,7 +253,7 @@ class BridgeHttpServer(private val app: Context) : NanoHTTPD(PORT) {
                 return reply(Response.Status.OK, okay(
                     "name" to "ALRADHY Universal Bridge",
                     "platform" to if (BuildConfig.FLAVOR == "tv") "Android TV" else "Android",
-                    "version" to "0.2.2",
+                    "version" to "0.2.3",
                     "accessibility" to (BridgeAccessibilityService.instance != null),
                     "imeReady" to BridgeImeService.isReady(),
                     "root" to BridgeRuntime.rootEnabled,
@@ -594,8 +594,12 @@ class MainActivity : Activity() {
                     "\nhttp://" + BridgeRuntime.localIp() + ":" + PORT +
                     "\nPairing PIN: " + BridgeRuntime.pairingPin +
                     "\nConnected sessions: " + BridgeRuntime.sessions.size +
-                    (if (BuildConfig.FLAVOR == "tv") "\nRemote Keyboard: " +
-                        (if (BridgeImeService.isReady()) "Ready ✓" else "Not active (choose Bridge Keyboard & focus a text field)") else "")
+                    (if (BuildConfig.FLAVOR=="mobile") {
+                        val native = AtvWifiRemote.status()
+                        "\n📡 Native Wi-Fi Remote: " + (if (native.optBoolean("connected")) "Connected ✓" else
+                            if (native.optBoolean("paired")) "Paired · reconnect" else "Not paired") +
+                            "\nTV IP: " + native.optString("host", "not set")
+                    } else "\nTV Bridge active · ALRADHY-KB unchanged")
             }
             checkPending()
             if(BuildConfig.FLAVOR=="mobile")AtvWifiRemote.tick()
@@ -635,7 +639,7 @@ class MainActivity : Activity() {
         scroller.addView(container)
         setContentView(scroller)
         container.addView(label("ALRADHY\nUNIVERSAL BRIDGE", 28f))
-        container.addView(label("Local-first • Trusted Wi-Fi only • v0.2.2", 14f))
+        container.addView(label("Local-first • Trusted Wi-Fi only • v0.2.3", 14f))
         statusText = label("")
         container.addView(statusText)
         container.addView(label("Security: This prototype uses unencrypted local HTTP. Never share passwords or sensitive text.", 13f))
@@ -645,18 +649,28 @@ class MainActivity : Activity() {
             BridgeRuntime.revokeAll()
             Toast.makeText(this, "All sessions revoked", Toast.LENGTH_SHORT).show()
         }
-        button("☷ Open This Device's Web Dashboard") {
-            openController("http://127.0.0.1:" + PORT)
+        if (BuildConfig.FLAVOR=="mobile") {
+            container.addView(label("🎮 Wi-Fi REMOTE — التحكم بالتلفزيون", 23f))
+            container.addView(label("هذا الريموت يعمل عبر Wi-Fi بدون تغيير ALRADHY-KB على التلفزيون.", 15f))
+            button("📡 فتح ريموت Wi-Fi الآن · Remote + Arabic Keyboard") {
+                startHost()
+                openController("http://127.0.0.1:" + PORT)
+            }
+            container.addView(label("لا تفتح عنوان TV Bridge القديم للتحكم؛ افتح الريموت من هذا الزر.", 13f))
+        } else {
+            button("☷ Open This Device's Web Dashboard") {
+                openController("http://127.0.0.1:" + PORT)
+            }
         }
         val address = EditText(this).apply {
-            hint = "TV address: 192.168.1.15"
+            hint = if (BuildConfig.FLAVOR=="mobile") "Other Bridge IP (not native TV remote)" else "TV address: 192.168.1.15"
             setText(getSharedPreferences("bridge", MODE_PRIVATE).getString("last_host", ""))
             setSingleLine(true)
             setTextColor(Color.WHITE)
             setHintTextColor(Color.LTGRAY)
         }
         container.addView(address)
-        button("🎮 Connect to TV / Other Bridge") {
+        button(if (BuildConfig.FLAVOR=="mobile") "📋 Legacy Bridge to another device · Clipboard only" else "🎮 Connect to TV / Other Bridge") {
             val ip = address.text.toString().trim()
             if (!Regex("^(192\\.168\\.|10\\.|172\\.(1[6-9]|2[0-9]|3[01])\\.)[0-9.]+$").matches(ip)) {
                 Toast.makeText(this, "Enter a private LAN IPv4 address", Toast.LENGTH_LONG).show()
