@@ -2,7 +2,7 @@ name: Build Universal Bridge APK
 
 on:
   push:
-    branches: [ "main", "master" ]
+    branches: [ "feature/alradhy-bridge-v1", "main" ]
 
 jobs:
   build:
