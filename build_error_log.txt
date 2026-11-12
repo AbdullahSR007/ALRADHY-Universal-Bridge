@@ -1,9 +1,42 @@
-build	Build Debug APK with Gradle	﻿2026-11-12T07:15:22.3147146Z ##[group]Run ./gradlew assembleDebug
-build	Build Debug APK with Gradle	2026-11-12T07:15:22.3147953Z ^[[36;1m./gradlew assembleDebug^[[0m
-build	Build Debug APK with Gradle	2026-11-12T07:15:22.3166378Z shell: /usr/bin/bash -e {0}
-build	Build Debug APK with Gradle	2026-11-12T07:15:22.3166982Z env:
-build	Build Debug APK with Gradle	2026-11-12T07:15:22.3167705Z   JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.21-9/x64
-build	Build Debug APK with Gradle	2026-11-12T07:15:22.3168880Z   JAVA_HOME_17_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.21-9/x64
-build	Build Debug APK with Gradle	2026-11-12T07:15:22.3169811Z ##[endgroup]
-build	Build Debug APK with Gradle	2026-11-12T07:15:22.3235890Z ./gradlew: 2: exec: ./gradle/wrapper/gradle-wrapper.jar: Permission denied
-build	Build Debug APK with Gradle	2026-11-12T07:15:22.3242700Z ##[error]Process completed with exit code 126.
+build	Build Debug APK with Direct Gradle	﻿2026-11-12T07:17:38.8013216Z ##[group]Run gradle assembleDebug
+build	Build Debug APK with Direct Gradle	2026-11-12T07:17:38.8014469Z ^[[36;1mgradle assembleDebug^[[0m
+build	Build Debug APK with Direct Gradle	2026-11-12T07:17:38.8052340Z shell: /usr/bin/bash -e {0}
+build	Build Debug APK with Direct Gradle	2026-11-12T07:17:38.8052897Z env:
+build	Build Debug APK with Direct Gradle	2026-11-12T07:17:38.8053496Z   JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.21-9/x64
+build	Build Debug APK with Direct Gradle	2026-11-12T07:17:38.8054430Z   JAVA_HOME_17_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.21-9/x64
+build	Build Debug APK with Direct Gradle	2026-11-12T07:17:38.8055167Z ##[endgroup]
+build	Build Debug APK with Direct Gradle	2026-11-12T07:17:41.8334983Z 
+build	Build Debug APK with Direct Gradle	2026-11-12T07:17:41.8337243Z Welcome to Gradle 9.8.2!
+build	Build Debug APK with Direct Gradle	2026-11-12T07:17:41.8339112Z 
+build	Build Debug APK with Direct Gradle	2026-11-12T07:17:41.8339832Z Here are the highlights of this release:
+build	Build Debug APK with Direct Gradle	2026-11-12T07:17:41.8341416Z  - Java 27 support
+build	Build Debug APK with Direct Gradle	2026-11-12T07:17:41.8342672Z  - Maven mirror settings reuse
+build	Build Debug APK with Direct Gradle	2026-11-12T07:17:41.8346113Z  - Linked problem locations in build output
+build	Build Debug APK with Direct Gradle	2026-11-12T07:17:41.8346827Z 
+build	Build Debug APK with Direct Gradle	2026-11-12T07:17:41.8347479Z For more details see https://docs.gradle.org/9.8.2/release-notes.html
+build	Build Debug APK with Direct Gradle	2026-11-12T07:17:41.8348297Z 
+build	Build Debug APK with Direct Gradle	2026-11-12T07:17:42.3289034Z Starting a Gradle Daemon (subsequent builds will be faster)
+build	Build Debug APK with Direct Gradle	2026-11-12T07:18:13.5346044Z 
+build	Build Debug APK with Direct Gradle	2026-11-12T07:18:13.5346174Z 
+build	Build Debug APK with Direct Gradle	2026-11-12T07:18:13.5372520Z FAILURE: Build failed with an exception.
+build	Build Debug APK with Direct Gradle	2026-11-12T07:18:13.5374186Z [Incubating] Problems report is available at: file:///home/runner/work/ALRADHY-Universal-Bridge/ALRADHY-Universal-Bridge/build/reports/problems/problems-report.html
+build	Build Debug APK with Direct Gradle	2026-11-12T07:18:13.5447383Z 
+build	Build Debug APK with Direct Gradle	2026-11-12T07:18:13.5448212Z * Where:
+build	Build Debug APK with Direct Gradle	2026-11-12T07:18:13.5486995Z Build file '/home/runner/work/ALRADHY-Universal-Bridge/ALRADHY-Universal-Bridge/app/build.gradle' line: 2
+build	Build Debug APK with Direct Gradle	2026-11-12T07:18:13.5546273Z 
+build	Build Debug APK with Direct Gradle	2026-11-12T07:18:13.5576624Z * What went wrong:
+build	Build Debug APK with Direct Gradle	2026-11-12T07:18:13.5618767Z An exception occurred applying plugin request [id: 'com.android.application']
+build	Build Debug APK with Direct Gradle	2026-11-12T07:18:13.5636567Z > Failed to apply plugin 'com.android.internal.application'.
+build	Build Debug APK with Direct Gradle	2026-11-12T07:18:13.5647312Z    > Failed to create service 'com.android.build.gradle.internal.errors.AndroidProblemReporterProvider_236ef785-0d7a-47bc-9aaf-2ff11a2fc5fd'.
+build	Build Debug APK with Direct Gradle	2026-11-12T07:18:13.5649885Z       > Could not create an instance of type com.android.build.gradle.internal.errors.AndroidProblemReporterProvider.
+build	Build Debug APK with Direct Gradle	2026-11-12T07:18:13.5651467Z          > Could not create service of type InternalProblems using ProblemsBuildTreeServices.createInternalProblems().
+build	Build Debug APK with Direct Gradle	2026-11-12T07:18:13.5655065Z             > Plugin 'com.android.internal.application' relies on 'org.gradle.api.problems.internal.InternalProblems', a Gradle internal API that was removed in Gradle 9.6.0. Update the plugin to a version that no longer uses Gradle internal APIs, or use Gradle 9.5. For more information, please refer to https://docs.gradle.org/9.8.2/userguide/upgrading_version_9.html#agp_8x_incompatible in the Gradle documentation.
+build	Build Debug APK with Direct Gradle	2026-11-12T07:18:13.5658080Z 
+build	Build Debug APK with Direct Gradle	2026-11-12T07:18:13.5658241Z * Try:
+build	Build Debug APK with Direct Gradle	2026-11-12T07:18:13.5658689Z > Run with --stacktrace option to get the stack trace.
+build	Build Debug APK with Direct Gradle	2026-11-12T07:18:13.5659439Z > Run with --info or --debug option to get more log output.
+build	Build Debug APK with Direct Gradle	2026-11-12T07:18:13.5660257Z > Run with --scan to get full insights from a Build Scan (powered by Develocity).
+build	Build Debug APK with Direct Gradle	2026-11-12T07:18:13.5661078Z > Get more help at https://help.gradle.org.
+build	Build Debug APK with Direct Gradle	2026-11-12T07:18:13.5661480Z 
+build	Build Debug APK with Direct Gradle	2026-11-12T07:18:13.5661631Z BUILD FAILED in 34s
+build	Build Debug APK with Direct Gradle	2026-11-12T07:18:14.0403698Z ##[error]Process completed with exit code 1.
