@@ -216,7 +216,7 @@ class BridgeHttpServer(private val app: Context) : NanoHTTPD(PORT) {
                 return reply(Response.Status.OK, okay(
                     "name" to "ALRADHY Universal Bridge",
                     "platform" to if (BuildConfig.FLAVOR == "tv") "Android TV" else "Android",
-                    "version" to "0.1.0",
+                    "version" to "0.1.1",
                     "accessibility" to (BridgeAccessibilityService.instance != null),
                     "root" to BridgeRuntime.rootEnabled
                 ))
@@ -400,8 +400,8 @@ class MainActivity : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        BridgeRuntime.rootEnabled = getSharedPreferences("bridge", MODE_PRIVATE)
-            .getBoolean("root", false)
+        BridgeRuntime.rootEnabled = BuildConfig.FLAVOR == "tv" &&
+            getSharedPreferences("bridge", MODE_PRIVATE).getBoolean("root", false)
         window.decorView.setBackgroundColor(Color.rgb(8, 11, 18))
         val scroller = ScrollView(this)
         container = LinearLayout(this).apply {
@@ -411,7 +411,7 @@ class MainActivity : Activity() {
         scroller.addView(container)
         setContentView(scroller)
         container.addView(label("ALRADHY\nUNIVERSAL BRIDGE", 28f))
-        container.addView(label("Local-first • Trusted Wi-Fi only • v0.1.0", 14f))
+        container.addView(label("Local-first • Trusted Wi-Fi only • v0.1.1", 14f))
         statusText = label("")
         container.addView(statusText)
         container.addView(label("Security: This prototype uses unencrypted local HTTP. Never share passwords or sensitive text.", 13f))
@@ -441,6 +441,7 @@ class MainActivity : Activity() {
                 openController("http://" + ip + ":" + PORT)
             }
         }
+        if (BuildConfig.FLAVOR == "tv") {
         button("⚙ Enable Android Accessibility service (optional)") {
             startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
         }
@@ -457,6 +458,7 @@ class MainActivity : Activity() {
                     getSharedPreferences("bridge", MODE_PRIVATE).edit().putBoolean("root", next).apply()
                     recreate()
                 }.setNegativeButton("Cancel", null).show()
+        }
         }
         startHost()
     }

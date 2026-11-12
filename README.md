@@ -1,4 +1,4 @@
-# ALRADHY Universal Bridge · v0.1.0 (development)
+# ALRADHY Universal Bridge · v0.1.1 (development)
 
 Android Mobile, Android TV and browser-based LAN bridge. This branch holds a functional *development prototype*, not a production-secure release.
 
@@ -7,7 +7,7 @@ Android Mobile, Android TV and browser-based LAN bridge. This branch holds a fun
 - Six-digit pairing PIN displayed on the host and explicit host-side approval.
 - In-memory 30-minute-idle access tokens; per-IP PIN attempt limiting.
 - Clipboard/text transfer requiring user action; incoming text copied to Android clipboard, optionally inserted through user-enabled IME.
-- TV Back/Home/D-pad via optional Android Accessibility Service (D-pad needs Android 13+), media/volume best-effort and optional root keyevent fallback.
+- Only the TV APK declares optional Accessibility and IME services; the mobile APK does not declare these sensitive services. TV Back/Home/D-pad require optional Accessibility (D-pad needs Android 13+) or explicit root opt-in.
 - Browser remote/clipboard hub with no browser install, a mobile controller, and TV launcher.
 - GitHub Actions split APKs + SHA256SUMS + build info; Termux build/download helper.
 
@@ -22,3 +22,6 @@ Android Mobile, Android TV and browser-based LAN bridge. This branch holds a fun
 5. To use D-pad without root, enable the app's Accessibility Service explicitly on the TV (Android 13+). For remote text entry activate ALRADHY IME and focus a field; otherwise incoming text goes to clipboard.
 
 The Android packages are separate variants: mobile=com.alradhy.universalbridge.mobile and tv=com.alradhy.universalbridge.tv. Builds are Android **debug-signed**, not release/update-safe across environments.
+
+## v0.1.1 reduced-permission mobile flavor
+The mobile APK does not declare Accessibility or Android IME services. They are registered only in the TV variant. Launcher adaptive icon is custom ALRADHY artwork. This reduces risk indicators but DOES NOT guarantee that Google Play Protect will allow side-loaded development APKs. Development/debug signing remains unchanged per build and may prevent seamless upgrades. Never disable Play Protect to install this app.
