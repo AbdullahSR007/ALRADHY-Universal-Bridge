@@ -77,6 +77,13 @@ object BridgeRuntime {
         return p
     }
 
+    /** Local in-app WebView is pre-authorized. No PIN dialog needed on same-device loopback. */
+    fun localUiToken(): String {
+        val token=randomToken()
+        sessions[token]=PairedSession("This Android device · local UI",System.currentTimeMillis())
+        return token
+    }
+
     fun approve(id: String) {
         val p = pairStatus(id) ?: return
         if (p.decision != "pending") return
@@ -396,8 +403,9 @@ class BridgeHttpServer(private val app: Context) : NanoHTTPD(PORT) {
                 }
                 else -> error(Response.Status.NOT_FOUND, "Unknown endpoint")
             }
-        } catch (_: Exception) {
-            error(Response.Status.BAD_REQUEST, "Invalid request")
+        } catch (ex: Exception) {
+            val safeMessage=(ex.message ?: "Invalid request").take(180)
+            error(Response.Status.BAD_REQUEST,safeMessage)
         }
     }
 }
@@ -746,6 +754,20 @@ class ControllerActivity : Activity() {
             finish(); return
         }
         browser = WebView(this)
+        val localToken=if(url=="http://127.0.0.1:"+PORT)BridgeRuntime.localUiToken() else null
+        var localInjected=false
+        if(localToken!=null) {
+            browser.webViewClient=object:android.webkit.WebViewClient() {
+                override fun onPageFinished(view:WebView?,finishedUrl:String?) {
+                    if(!localInjected && finishedUrl?.startsWith("http://127.0.0.1:")==true){
+                        localInjected=true
+                        val storageKey=JSONObject.quote("alradhy.bridge.token.127.0.0.1:"+PORT)
+                        val storageValue=JSONObject.quote(localToken)
+                        browser.evaluateJavascript("sessionStorage.setItem("+storageKey+","+storageValue+");location.reload();",null)
+                    }
+                }
+            }
+        }
         browser.settings.javaScriptEnabled = true
         browser.settings.domStorageEnabled = true
         browser.settings.allowFileAccess = false
