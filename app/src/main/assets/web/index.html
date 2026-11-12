@@ -16,12 +16,24 @@ h1,h2,h3,p{margin:0}.brand h1{font-size:24px;letter-spacing:3px}.brand p,.subtit
 <body>
 <div class="wrap">
 <header class="header"><div class="brand"><div class="logo">A</div><div><h1>ALRADHY</h1><p>UNIVERSAL BRIDGE · جسر واحد، كل أجهزتك</p></div></div><span class="badge" id="bridgeStatus">● Connecting...</span></header>
-<div class="hero"><div><h2>نصوصك، أجهزتك .. في مكان واحد</h2><p>Your Content. Your Devices. One Place.</p></div><div class="badge">v0.1.4 • Local First</div></div>
+<div class="hero"><div><h2>نصوصك، أجهزتك .. في مكان واحد</h2><p>Your Content. Your Devices. One Place.</p></div><div class="badge">v0.2.0 • Local First</div></div>
 <div class="security">نسخة تطوير: الاتصال المحلي HTTP غير مشفّر. استخدم شبكة منزلية موثوقة فقط، ولا ترسل كلمات مرور أو نصوصًا سرية. المزامنة يدويّة في هذه النسخة.</div>
 <div class="grid">
 <section class="stack">
+  <div class="card hide" id="nativeWifiCard">
+   <h2>📡 ريموت Android TV عبر Wi-Fi</h2>
+   <p class="section-note">من التابلت أو الهاتف: اقتران آمن مباشرة مع خدمة ريموت التلفزيون المدمجة. لا يلزم Root أو تركيب كيبورد جديد على التلفزيون.</p>
+   <label>TV IPv4</label><input id="nativeTvIp" type="text" inputmode="decimal" placeholder="192.168.1.20" style="margin:7px 0"/>
+   <div class="rows"><button id="nativeScan">اكتشاف التلفزيونات</button><button class="primary" id="nativePairStart">بدء الاقتران</button></div>
+   <select id="nativeFound" style="margin-top:8px"><option value="">الأجهزة المكتشفة...</option></select>
+   <label style="display:block;margin-top:12px">رمز التلفزيون (ستة أرقام/أحرف)</label>
+   <input id="nativePairCode" type="text" inputmode="text" maxlength="6" placeholder="A1B2C3" style="margin:7px 0;direction:ltr;text-align:center;letter-spacing:5px"/>
+   <div class="rows"><button id="nativePairFinish">تأكيد الرمز</button><button class="primary" id="nativeConnect">اتصال</button></div>
+   <button id="nativeDisconnect" class="danger" style="margin-top:10px;width:100%">فصل Wi-Fi Remote وإعادة كيبورد التلفزيون</button>
+   <div class="feedback" id="nativeMsg"></div><p id="nativeState" class="section-note">غير متصل</p>
+  </div>
   <div class="card"><h2>الأجهزة والجلسات</h2><p class="subtitle">الأجهزة المتصلة بهذا الجسر</p><div class="statrow"><div class="stat"><b id="deviceCount">0</b><span>جلسات فعالة</span></div><div class="stat"><b id="accessState">—</b><span>Accessibility</span></div><div class="stat"><b id="rootState">—</b><span>Root Remote</span></div></div><div id="deviceList" class="history" style="margin-top:12px"></div><div class="section-note">يطلب كل جهاز جديد موافقةً صريحة من شاشة الجهاز المضيف.</div></div>
-  <div class="card"><h2>التحكم الآمن</h2><p class="section-note">للإدخال المباشر بالعربية والإنجليزية: اختر ALRADHY Bridge Keyboard من إعدادات التلفزيون وركّز حقل الكتابة. الريموت يعتمد على Root Remote. الاتصال HTTP غير مشفّر.</p><button class="danger" id="disconnect" style="margin-top:15px;width:100%">فصل جلستي الحالية</button></div>
+  <div class="card"><h2>التحكم الآمن</h2><p class="section-note">الريموت الأصلي عبر Wi-Fi يعمل من نسخة الهاتف/التابلت دون Root أو كيبورد إضافي. خدمة التلفزيون قد تبدّل الإدخال مؤقتًا عند إرسال النص ثم تعيده تلقائيًا عند انتهاء الجلسة.</p><button class="danger" id="disconnect" style="margin-top:15px;width:100%">فصل جلستي الحالية</button></div>
 </section>
 <section class="stack">
   <div class="card"><div class="remotehead"><h2>🎮 ريموت التلفزيون</h2><span class="muted" id="remoteState">جاهز</span></div><div class="controls"><button data-key="POWER">⏻ Power</button><button data-key="HOME">⌂ Home</button><button data-key="MENU">☰ Menu</button></div>
@@ -48,14 +60,14 @@ h1,h2,h3,p{margin:0}.brand h1{font-size:24px;letter-spacing:3px}.brand p,.subtit
        <button id="liveRight">→</button>
     </div>
   </div>
-  <p class="section-note">يتطلب الوضع «مباشر» اختيار ALRADHY Bridge Keyboard على التلفزيون وفتح خانة إدخال. يمكن الرجوع إلى ALRADHY-KB لاحقًا من إعدادات الكيبورد.</p>
+  <p class="section-note">وضع «مباشر» عبر Wi-Fi Native لا يحتاج تفعيل ALRADHY Bridge Keyboard. فتح النص يفعّل إدخال التلفزيون المدمج مؤقتًا ثم يُغلق تلقائيًا. قد تختلف استجابة بعض التطبيقات.</p>
   <div class="feedback" id="textMsg"></div></div>
 </section>
 <section class="stack">
   <div class="card"><h2>📋 Clipboard Hub</h2><p class="subtitle">نسخ ونقل نصوص وروابط بين الأجهزة</p><h3 style="margin:19px 0 10px">النص المُستلم على الجسر</h3><textarea id="received" readonly placeholder="لم يصل نص بعد"></textarea><div class="rows" style="margin-top:9px"><button id="copyReceived">نسخ إلى هذا الجهاز</button><button id="refreshClipboard">تحديث</button></div><h3 style="margin:20px 0 10px">مشاركة نص جديد</h3><textarea id="clipboardText" placeholder="اكتب أو الصق النص هنا..."></textarea><div class="rows" style="margin-top:9px"><button id="browserPaste">لصق من الحافظة</button><button class="primary" id="sendClipboard">إرسال للجسر</button></div><div class="feedback" id="clipboardMsg"></div><p class="section-note">بعض المتصفحات، خصوصًا Safari على HTTP، تمنع Clipboard API. يمكنك دائمًا اللصق يدويًا في مربع النص.</p></div>
   <div class="card"><h2>ℹ️ معلومات الجسر</h2><div class="logline"><strong>Protocol</strong>LAN HTTP prototype · No cloud</div><div class="logline"><strong>Pairing</strong>PIN + host approval</div><div class="logline"><strong>Session</strong>30 min inactivity expiry</div><div class="logline"><strong>Privacy</strong>Text stays on the host / LAN</div></div>
 </section>
-</div><footer class="foot">ALRADHY Universal Bridge · Designed for Android, Android TV and modern browsers · v0.1.4</footer>
+</div><footer class="foot">ALRADHY Universal Bridge · Designed for Android, Android TV and modern browsers · v0.2.0</footer>
 </div>
 
 <div class="auth" id="authScreen"><div class="authpanel"><div class="brand"><div class="logo">A</div><div><h2>اقتران آمن محليًا</h2><p>ALRADHY Universal Bridge</p></div></div><p>افتح التطبيق على الجهاز المضيف، ثم أدخل رمز الاقتران الظاهر على شاشته. بعد ذلك وافق من شاشة المضيف.</p>
@@ -66,7 +78,7 @@ h1,h2,h3,p{margin:0}.brand h1{font-size:24px;letter-spacing:3px}.brand p,.subtit
 <script>
 "use strict";
 const $=id=>document.getElementById(id), tokenKey='alradhy.bridge.token.'+location.host;
-let token=sessionStorage.getItem(tokenKey)||'', currentRevision=-1, pairingPoll=null;
+let token=sessionStorage.getItem(tokenKey)||'', currentRevision=-1, pairingPoll=null, nativeMode=false;
 function say(id,text,good=true){$(id).textContent=text;$(id).style.color=good?'#20c997':'#ff9ba4'}
 async function request(path,method='GET',data=null,auth=true){
   const headers={'Accept':'application/json'};
@@ -78,7 +90,7 @@ async function request(path,method='GET',data=null,auth=true){
   return j;
 }
 async function initialStatus(){
-  try {const s=await request('/api/status','GET',null,false);$('bridgeStatus').textContent='● '+s.platform+' · Online';$('accessState').textContent=s.accessibility?'ON':'OFF';$('rootState').textContent=s.root?'ON':'OFF';if(token){$('authScreen').classList.add('hide');await refresh()}}
+  try {const s=await request('/api/status','GET',null,false);nativeMode=!!s.nativeEnabled; if(nativeMode)$('nativeWifiCard').classList.remove('hide');$('bridgeStatus').textContent='● '+s.platform+' · Online';$('accessState').textContent=s.accessibility?'ON':'OFF';$('rootState').textContent=s.root?'ON':'OFF';if(token){$('authScreen').classList.add('hide');await refresh()}}
   catch(e){$('bridgeStatus').textContent='○ Connection Error';say('pairMsg',e.message,false)}
 }
 async function pair(){
@@ -109,6 +121,7 @@ async function refresh(){
     $('deviceCount').textContent=s.devices.length;
     $('accessState').textContent=s.accessibility?'ON':'OFF';
     $('rootState').textContent=s.root?'ON':'OFF';
+    if(nativeMode)await refreshNativeStatus();
     $('remoteState').textContent=s.imeReady?'⌨ IME Ready':'⌨ IME not active';
     $('deviceList').replaceChildren();
     s.devices.forEach(d=>{const el=document.createElement('div');el.className='logline';const title=document.createElement('strong');title.textContent=d.client;el.append(title,document.createTextNode(' paired session'));$('deviceList').appendChild(el)});
@@ -117,15 +130,15 @@ async function refresh(){
 }
 async function keySend(key){
   say('remoteMsg','جارٍ إرسال '+key+' ...');
-  try {const r=await request('/api/key','POST',{key});say('remoteMsg',r.result||'تم إرسال الأمر')}
+  try {const r=await request(nativeMode?'/api/native/key':'/api/key','POST',{key});say('remoteMsg',r.result||'تم إرسال الأمر')}
   catch(e){say('remoteMsg','لم ينفذ الأمر: '+e.message,false)}
 }
 async function clipboardSend(target,text,path){
   if(!text.trim()){say(target,'اكتب نصًا أولاً',false);return}
   try{
-    const r=await request(path,'POST',{text});
+    const r=await request(nativeMode && path==='/api/text'?'/api/native/text':path,'POST',{text});
     if(path==='/api/text') {
-      const message = r.delivery==='ime' ? '✓ وصل النص للحقل النشط عبر Android IME (يدعم العربية والإنجليزية)' : r.delivery==='paste_key_sent'
+      const message = r.delivery==='native_sent' ? 'أُرسل النص عبر Android TV Remote v2 — تحقق من ظهوره داخل الخانة المفتوحة على التلفزيون' : r.delivery==='ime' ? '✓ وصل النص للحقل النشط عبر Android IME (يدعم العربية والإنجليزية)' : r.delivery==='paste_key_sent'
         ? '✓ تم إرسال أمر لصق النص إلى الحقل النشط على التلفزيون. إذا لم يظهر النص، اضغط على الحقل في التلفزيون وجرّب مجددًا.'
         : r.delivery==='clipboard_only'
           ? 'تم حفظ النص العربي/الإنجليزي في الحافظة فقط. فعّل Root Remote على التلفزيون، وافتح الحقل المطلوب ثم أعد الإرسال.'
@@ -137,6 +150,35 @@ async function clipboardSend(target,text,path){
     else{say(target,r.deliveredToClipboard?'تم نقل النص إلى حافظة الجهاز المضيف':'تم حفظ النص في الجسر، لكن لم تنجح الكتابة للحافظة',r.deliveredToClipboard);await refresh()}
   }catch(e){say(target,e.message,false)}
 }
+async function nativeAction(endpoint,payload={}){
+  try{
+    const r=await request(endpoint,'POST',payload);
+    say('nativeMsg',r.message||r.result||'تمت العملية');
+    await refreshNativeStatus();
+    return r;
+  }catch(e){say('nativeMsg',e.message,false);return null;}
+}
+async function refreshNativeStatus(){
+  if(!nativeMode||!token)return;
+  try{
+    const r=await request('/api/native/status');
+    const s=r.native;
+    $('nativeState').textContent='TV: '+(s.host||'—')+' · '+(s.connected?'● متصل':s.paired?'مقترن':'غير مقترن')
+      +(s.nativeImeActive?' · إدخال نص مؤقت':'');
+    if(s.host&&!$('nativeTvIp').value)$('nativeTvIp').value=s.host;
+    const list=$('nativeFound'), selected=list.value;
+    list.replaceChildren(new Option('اختر جهازًا مكتشفًا...', ''));
+    r.devices.forEach(d=>list.add(new Option(d.name+' — '+d.ip,d.ip)));
+    if(selected)list.value=selected;
+    $('remoteState').textContent=s.connected?'● Wi-Fi Remote متصل':'○ Wi-Fi Remote غير متصل';
+  }catch(e){say('nativeMsg',e.message,false)}
+}
+$('nativeScan').addEventListener('click',()=>nativeAction('/api/native/scan'));
+$('nativeFound').addEventListener('change',()=>{if($('nativeFound').value)$('nativeTvIp').value=$('nativeFound').value});
+$('nativePairStart').addEventListener('click',()=>nativeAction('/api/native/pair/start',{ip:$('nativeTvIp').value.trim()}));
+$('nativePairFinish').addEventListener('click',()=>nativeAction('/api/native/pair/finish',{code:$('nativePairCode').value.trim()}));
+$('nativeConnect').addEventListener('click',()=>nativeAction('/api/native/connect',{ip:$('nativeTvIp').value.trim()}));
+$('nativeDisconnect').addEventListener('click',async()=>{deactivateDirect();await nativeAction('/api/native/disconnect')});
 document.querySelectorAll('[data-key]').forEach(b=>b.addEventListener('click',()=>keySend(b.dataset.key)));
 $('startPair').addEventListener('click',pair);
 $('pairPin').addEventListener('keydown',e=>{if(e.key==='Enter')pair()});
@@ -148,13 +190,18 @@ function deactivateDirect(message='') {
   $('directPanel').classList.add('hide');
   $('directToggle').textContent='مباشر · تشغيل';
   $('directToggle').setAttribute('aria-pressed','false');
+  if(nativeMode && token)request('/api/native/direct/end','POST',{}).catch(()=>{});
   if(message)say('textMsg',message,false);
 }
 async function toggleDirect(){
   if(directMode){deactivateDirect();say('textMsg','تم إيقاف الكتابة المباشرة');return}
   try {
     const state=await request('/api/state');
-    if(!state.imeReady){
+    if(!nativeMode){say('textMsg','استخدم واجهة Bridge المستضافة على التابلت/الجوال للكتابة عبر ريموت Wi-Fi. هذه الواجهة تستضيفها شاشة التلفزيون.',false);return}
+    if(nativeMode && !(await request('/api/native/status')).native.paired){
+      say('textMsg','اقترن بالتلفزيون أولاً عبر لوحة Wi-Fi Remote.',false);return;
+    }
+    if(!nativeMode && !state.imeReady){
       say('textMsg','للكتابة الحية: على التلفزيون اختر ALRADHY Bridge Keyboard من إعدادات لوحة المفاتيح، ثم افتح حقل كتابة واضغط عليه. Root وحده لا يكفي لإدخال العربية.',false);
       return;
     }
@@ -170,7 +217,7 @@ async function toggleDirect(){
 function queueDirect(op,text=''){
   if(!directMode)return;
   directQueue=directQueue.then(async()=>{
-     await request('/api/keyboard','POST',{op,text});
+     await request(nativeMode?'/api/native/live':'/api/keyboard','POST',{op,text});
      say('textMsg','✓ تم قبول '+(op==='type'?'النص':op)+' بواسطة حقل التلفزيون');
   }).catch(e=>{
      deactivateDirect('توقف الإدخال المباشر: '+e.message+' — تحقق من تفعيل Bridge Keyboard وتركيز حقل التلفزيون.');
