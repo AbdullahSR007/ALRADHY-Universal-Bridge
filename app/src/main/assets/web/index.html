@@ -203,7 +203,7 @@ async function refreshNativeStatus(){
     const s=r.native;
     $('nativeState').textContent='TV: '+(s.host||'—')+' · '+(s.connected?'● متصل':s.paired?'مقترن':'غير مقترن')
       +(s.nativeImeActive?' · إدخال نص مؤقت':'')+' · '+(s.phase||'idle');
-    $('nativeWifiStat').textContent=s.connected?'متصل ✓':s.paired?'مقترن':'غير متصل';
+    $('nativeWifiStat').textContent=tvHubMode && s.mode==='root_opt_in'?'Root ON':s.connected?'متصل ✓':s.paired?'مقترن':'غير متصل';
     $('nativeWifiStat').style.color=s.connected?'#20c997':'#ffbf69';
     $('nativeWifiTvIp').textContent=s.host?(tvHubMode?'TV Hub · ':'TV · ')+s.host:'لم يتم تحديد التلفزيون';
     if(s.host&&!$('nativeTvIp').value)$('nativeTvIp').value=s.host;

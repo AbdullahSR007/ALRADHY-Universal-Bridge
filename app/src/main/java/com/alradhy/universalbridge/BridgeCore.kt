@@ -193,7 +193,7 @@ object BridgeRuntime {
     fun pasteToFocusedField(context: Context, text: String): Pair<String, String> {
         val copied = updateClipboard(context, text)
         if (!copied) return Pair("failed", "Failed to put Unicode text on Android clipboard")
-        if (BuildConfig.FLAVOR != "tv" || !rootEnabled)
+        if ((BuildConfig.FLAVOR != "tv" && BuildConfig.FLAVOR != "tvhub") || !rootEnabled)
             return Pair("clipboard_only", "Text copied to TV clipboard. Root Remote is disabled.")
         return try {
             val command = "input keyevent " + KeyEvent.KEYCODE_PASTE.toString()
@@ -479,13 +479,14 @@ class BridgeHttpServer(private val app: Context) : NanoHTTPD(PORT) {
                 }
                 "/api/native/text" -> {
                     if (!TvHubDirect.available()) return error(Response.Status.FORBIDDEN,"Use mobile or TV Hub")
-                    reply(Response.Status.OK,okay("result" to AtvWifiRemote.text(obj.optString("text"),false),"delivery" to "native_sent"))
+                    val sent=TvHubDirect.sendText(app,obj.optString("text"))
+                    reply(Response.Status.OK,okay("result" to sent.first,"delivery" to sent.second))
                 }
                 "/api/native/live" -> {
                     if (!TvHubDirect.available()) return error(Response.Status.FORBIDDEN,"Use mobile or TV Hub")
                     val text=obj.optString("text","")
                     if(text.length>256)return error(Response.Status.BAD_REQUEST,"Live chunk too large")
-                    reply(Response.Status.OK,okay("result" to AtvWifiRemote.edit(obj.optString("op"),text),"delivery" to "native_sent"))
+                    reply(Response.Status.OK,okay("result" to TvHubDirect.live(app,obj.optString("op"),text),"delivery" to "native_sent"))
                 }
                 "/api/native/direct/end" -> {
                     if (!TvHubDirect.available()) return error(Response.Status.FORBIDDEN,"Use mobile or TV Hub")
@@ -824,6 +825,18 @@ class MainActivity : Activity() {
             container.addView(label("TV Hub address: http://"+BridgeRuntime.localIp()+":"+PORT, 20f))
             container.addView(label("افتح العنوان من الكمبيوتر أو الآيفون على نفس Wi-Fi، ووافق على أول متصفح من شاشة هذا التلفزيون.", 16f))
             container.addView(label("طرق التحكم: Root Remote اختياري للأزرار (بالأسفل)، أو اقتران خدمة Android TV Remote المدمجة بالتلفزيون نفسه. لا تغيير في ALRADHY-KB.", 14f))
+            button(if(BridgeRuntime.rootEnabled) "✓ Root Remote Enabled (tap to turn OFF)" else "⚙️ Enable Root Remote for direct browser buttons (Optional)") {
+                AlertDialog.Builder(this)
+                    .setTitle("TV Hub — Local Root Remote")
+                    .setMessage("Allow whitelisted remote key events from approved browsers on your trusted Wi-Fi? This does NOT change ALRADHY-KB or input method. Root may prompt for permission.")
+                    .setPositiveButton(if(BridgeRuntime.rootEnabled)"Disable" else "Enable") { _, _ ->
+                        val on = !BridgeRuntime.rootEnabled
+                        BridgeRuntime.rootEnabled=on
+                        getSharedPreferences("bridge",MODE_PRIVATE).edit().putBoolean("root",on).apply()
+                        recreate()
+                    }
+                    .setNegativeButton("Cancel",null).show()
+            }
             button("📺 فتح لوحة TV Hub") {openController("http://127.0.0.1:"+PORT)}
         }
         if (TvHubDirect.available()) {
@@ -871,7 +884,7 @@ class MainActivity : Activity() {
                 Toast.makeText(this,"Disconnected",Toast.LENGTH_SHORT).show()
             }
         }
-        if (BuildConfig.FLAVOR == "tv" || TvHubDirect.enabled()) {
+        if (BuildConfig.FLAVOR == "tv") {
         container.addView(label("ALRADHY-KB remains unchanged. For Wi-Fi Remote v2 text input use the mobile/tablet Bridge; no extra TV keyboard is required.", 14f))
         button(if (BridgeRuntime.rootEnabled) "Root Remote: ON (tap to disable)" else "Root Remote: OFF (tap to opt in)") {
             val next = !BridgeRuntime.rootEnabled

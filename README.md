@@ -77,3 +77,6 @@ The Remote v2 TLS connection after successful pairing now uses the standard Remo
 - When the TV is rooted, TV Hub offers an **opt-in local Root Remote** alternative for Home, Back, DPAD, volume/media buttons. It is never enabled without user approval and doesn't change input methods.
 - Unicode text uses Remote v2 self-pair if available; root fallback is clipboard+paste and may not type into every TV app. The Wi-Fi browser gateway is HTTP (not encrypted); trusted LAN only, never send sensitive text.
 - The mobile and legacy TV variants remain on the preexisting feature branch, unchanged; new experimental host is isolated in branch `feature/v0.3-tv-direct-host`.
+
+### Beta1 build correction
+TV Hub manifest overrides application label in its higher-priority variant using tools:replace. Root input is an explicit opt-in near the top of the TV Hub main screen (not mandatory if the built-in Remote Service self-connection works). Native TVHub text endpoint now uses the same direct dispatcher as browsers. The TV Hub root fallback can attempt clipboard paste without changing ALRADHY-KB; some editors won't accept it.
