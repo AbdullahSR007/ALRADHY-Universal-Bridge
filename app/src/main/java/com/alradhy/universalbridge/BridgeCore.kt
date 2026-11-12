@@ -34,7 +34,7 @@ data class PendingPair(
     @Volatile var decision: String = "pending",
     @Volatile var token: String = ""
 )
-data class PairedSession(val client: String, @Volatile var lastUsed: Long)
+data class PairedSession(val client: String, @Volatile var lastUsed: Long, val expiresAt: Long = Long.MAX_VALUE)
 
 object BridgeRuntime {
     @Volatile var server: BridgeHttpServer? = null
@@ -45,11 +45,47 @@ object BridgeRuntime {
     val pending = ConcurrentHashMap<String, PendingPair>()
     val sessions = ConcurrentHashMap<String, PairedSession>()
     private val tries = ConcurrentHashMap<String, MutableList<Long>>()
+    private const val BROWSER_TRUST_MS = 30L * 24 * 60 * 60 * 1000
+    @Volatile private var browserAuthPrefs: android.content.SharedPreferences? = null
+    @Synchronized fun init(context: Context) {
+        if (browserAuthPrefs == null)
+            browserAuthPrefs = context.applicationContext.getSharedPreferences(
+                "bridge_trusted_browser_v1", Context.MODE_PRIVATE)
+    }
+    private fun authKey(token: String): String =
+        "approved_" + java.security.MessageDigest.getInstance("SHA-256")
+            .digest(token.toByteArray(Charsets.UTF_8))
+            .joinToString("") { "%02x".format(it.toInt() and 255) }
+    private fun rememberBrowser(token: String, client: String, expiresAt: Long) {
+        val saved=JSONObject().put("client",client).put("expiresAt",expiresAt)
+        browserAuthPrefs?.edit()?.putString(authKey(token),saved.toString())?.apply()
+    }
+    private fun approvedBrowser(token: String, now: Long): PairedSession? {
+        val prefs=browserAuthPrefs ?: return null
+        val key=authKey(token)
+        val raw=prefs.getString(key,null) ?: return null
+        val info=try { JSONObject(raw) } catch (_:Exception) {
+            prefs.edit().remove(key).apply();return null
+        }
+        val expiry=info.optLong("expiresAt",0)
+        if (expiry<=now) {
+            prefs.edit().remove(key).apply();return null
+        }
+        return PairedSession(info.optString("client","Trusted browser").take(45),now,expiry)
+    }
+    fun forgetSession(token: String) {
+        sessions.remove(token)
+        if(token.isNotBlank())browserAuthPrefs?.edit()?.remove(authKey(token))?.apply()
+    }
     @Volatile var onPairingRequest: ((PendingPair) -> Unit)? = null
 
     private fun newPin(): String = (100000 + SecureRandom().nextInt(900000)).toString()
     fun rotatePin() { pairingPin = newPin(); pending.clear() }
-    fun revokeAll() { sessions.clear(); pending.clear(); rotatePin() }
+    fun revokeAll() {
+        sessions.clear(); pending.clear()
+        browserAuthPrefs?.edit()?.clear()?.apply()
+        rotatePin()
+    }
 
     fun beginPair(pin: String, name: String, ip: String): PendingPair? {
         val now = System.currentTimeMillis()
@@ -88,7 +124,10 @@ object BridgeRuntime {
         val p = pairStatus(id) ?: return
         if (p.decision != "pending") return
         val token = randomToken()
-        sessions[token] = PairedSession(p.client, System.currentTimeMillis())
+        val now=System.currentTimeMillis()
+        val expiry=now+BROWSER_TRUST_MS
+        sessions[token]=PairedSession(p.client,now,expiry)
+        rememberBrowser(token,p.client,expiry)
         p.token = token
         p.decision = "approved"
     }
@@ -98,13 +137,18 @@ object BridgeRuntime {
         val text = authHeader ?: return false
         if (!text.startsWith("Bearer ")) return false
         val token = text.removePrefix("Bearer ").trim()
-        val current = sessions[token] ?: return false
-        val now = System.currentTimeMillis()
-        if (now - current.lastUsed > 30L * 60 * 1000) {
-            sessions.remove(token)
-            return false
+        if (token.length != 64 || token.any { !it.isDigit() && it !in 'a'..'f' }) return false
+        val now=System.currentTimeMillis()
+        val current=sessions[token]
+        if (current != null && current.expiresAt > now &&
+            now-current.lastUsed <= 30L*60*1000) {
+            current.lastUsed=now
+            return true
         }
-        current.lastUsed = now
+        if(current != null)sessions.remove(token)
+        // Browser approval survives a process restart; TV credentials remain on the tablet.
+        val resumed=approvedBrowser(token,now) ?: return false
+        sessions[token]=resumed
         return true
     }
 
@@ -228,6 +272,7 @@ object BridgeRuntime {
 }
 
 class BridgeHttpServer(private val app: Context) : NanoHTTPD(PORT) {
+    init { BridgeRuntime.init(app) }
     private fun reply(code: Response.Status, data: JSONObject): Response =
         NanoHTTPD.newFixedLengthResponse(code, "application/json; charset=utf-8", data.toString()).apply {
             addHeader("Cache-Control", "no-store")
@@ -253,7 +298,7 @@ class BridgeHttpServer(private val app: Context) : NanoHTTPD(PORT) {
                 return reply(Response.Status.OK, okay(
                     "name" to "ALRADHY Universal Bridge",
                     "platform" to if (BuildConfig.FLAVOR == "tv") "Android TV" else "Android",
-                    "version" to "0.2.5",
+                    "version" to "0.2.6",
                     "accessibility" to (BridgeAccessibilityService.instance != null),
                     "imeReady" to BridgeImeService.isReady(),
                     "root" to BridgeRuntime.rootEnabled,
@@ -266,6 +311,7 @@ class BridgeHttpServer(private val app: Context) : NanoHTTPD(PORT) {
                 // Reject unsafe text requests rather than silently corrupt Arabic.
                 val textRoute = path in setOf(
                     "/api/native/text", "/api/native/live", "/api/native/echo",
+                    "/api/remote/text", "/api/remote/live",
                     "/api/text", "/api/clipboard", "/api/keyboard"
                 )
                 if (textRoute) {
@@ -301,6 +347,36 @@ class BridgeHttpServer(private val app: Context) : NanoHTTPD(PORT) {
                 "/api/native/status" -> {
                     if (BuildConfig.FLAVOR!="mobile") return error(Response.Status.FORBIDDEN,"Use the mobile Bridge host")
                     reply(Response.Status.OK,okay("native" to AtvWifiRemote.status(),"devices" to AtvWifiRemote.discoveries()))
+                }
+                // Browser clients use the tablet's existing TV Remote v2 instance.
+                // Browsers never pair with the TV or receive the TLS certificate.
+                "/api/remote/status" -> {
+                    if (BuildConfig.FLAVOR!="mobile") return error(Response.Status.FORBIDDEN,"Open tablet Bridge, not TV Bridge")
+                    if (s.method!=Method.GET) return error(Response.Status.BAD_REQUEST,"GET required")
+                    reply(Response.Status.OK,okay("native" to AtvWifiRemote.status(),"via" to "tablet_bridge"))
+                }
+                "/api/remote/key" -> {
+                    if (BuildConfig.FLAVOR!="mobile") return error(Response.Status.FORBIDDEN,"Open tablet Bridge, not TV Bridge")
+                    if (s.method!=Method.POST) return error(Response.Status.BAD_REQUEST,"POST required")
+                    reply(Response.Status.OK,okay("result" to AtvWifiRemote.key(obj.optString("key")),"via" to "tablet_bridge"))
+                }
+                "/api/remote/text" -> {
+                    if (BuildConfig.FLAVOR!="mobile") return error(Response.Status.FORBIDDEN,"Open tablet Bridge, not TV Bridge")
+                    if (s.method!=Method.POST) return error(Response.Status.BAD_REQUEST,"POST required")
+                    reply(Response.Status.OK,okay("result" to AtvWifiRemote.text(obj.optString("text"),false),"delivery" to "native_sent"))
+                }
+                "/api/remote/live" -> {
+                    if (BuildConfig.FLAVOR!="mobile") return error(Response.Status.FORBIDDEN,"Open tablet Bridge, not TV Bridge")
+                    if (s.method!=Method.POST) return error(Response.Status.BAD_REQUEST,"POST required")
+                    val text=obj.optString("text","")
+                    if (text.length>256) return error(Response.Status.BAD_REQUEST,"Live text too long")
+                    reply(Response.Status.OK,okay("result" to AtvWifiRemote.edit(obj.optString("op"),text)))
+                }
+                "/api/remote/direct/end" -> {
+                    if (BuildConfig.FLAVOR!="mobile") return error(Response.Status.FORBIDDEN,"Open tablet Bridge, not TV Bridge")
+                    if (s.method!=Method.POST) return error(Response.Status.BAD_REQUEST,"POST required")
+                    AtvWifiRemote.endInput()
+                    reply(Response.Status.OK,okay("closed" to true))
                 }
                 "/api/native/scan" -> {
                     if (BuildConfig.FLAVOR!="mobile") return error(Response.Status.FORBIDDEN,"Mobile only")
@@ -423,7 +499,7 @@ class BridgeHttpServer(private val app: Context) : NanoHTTPD(PORT) {
                 "/api/disconnect" -> {
                     if (s.method != Method.POST) return error(Response.Status.BAD_REQUEST, "POST expected")
                     val token = s.headers["authorization"]?.removePrefix("Bearer ")?.trim().orEmpty()
-                    BridgeRuntime.sessions.remove(token)
+                    BridgeRuntime.forgetSession(token)
                     reply(Response.Status.OK, okay("disconnected" to true))
                 }
                 else -> error(Response.Status.NOT_FOUND, "Unknown endpoint")
@@ -439,6 +515,7 @@ class BridgeService : Service() {
     override fun onBind(intent: Intent?): IBinder? = null
     override fun onCreate() {
         super.onCreate()
+        BridgeRuntime.init(applicationContext)
         if(BuildConfig.FLAVOR=="mobile")AtvWifiRemote.init(applicationContext)
         val channel = "bridge_session"
         val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -627,6 +704,7 @@ class MainActivity : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        BridgeRuntime.init(applicationContext)
         if(BuildConfig.FLAVOR=="mobile")AtvWifiRemote.init(applicationContext)
         BridgeRuntime.rootEnabled = BuildConfig.FLAVOR == "tv" &&
             getSharedPreferences("bridge", MODE_PRIVATE).getBoolean("root", false)
@@ -639,7 +717,7 @@ class MainActivity : Activity() {
         scroller.addView(container)
         setContentView(scroller)
         container.addView(label("ALRADHY\nUNIVERSAL BRIDGE", 28f))
-        container.addView(label("Local-first • Trusted Wi-Fi only • v0.2.5", 14f))
+        container.addView(label("Local-first • Trusted Wi-Fi only • v0.2.6", 14f))
         statusText = label("")
         container.addView(statusText)
         container.addView(label("Security: This prototype uses unencrypted local HTTP. Never share passwords or sensitive text.", 13f))
