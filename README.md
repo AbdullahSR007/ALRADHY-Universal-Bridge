@@ -58,3 +58,6 @@ Root cause: Bridge's web fetch() sent POST `Content-Type: application/json` **wi
 
 ## v0.2.3: Wi-Fi Remote now easy to find
 The mobile/tablet app displays **📡 فتح ريموت Wi-Fi الآن** at the top of its home screen. This always opens its own localhost-native Wi-Fi Remote, not the TV HTTP Bridge (which does not own the native TLS remote connection). The older other-Bridge button is relabeled **Clipboard only**. The dashboard shows a prominent Wi-Fi Remote navigation button with guidance when opened from the TV-hosted Bridge. Native connection status shows directly on the mobile main screen. ALRADHY-KB is untouched.
+
+## v0.2.4 — Wi-Fi Remote status in Devices & Sessions
+Wi-Fi Remote now has its **own status stat in the Devices & Sessions section** beside Root Remote and Accessibility: Connected/Paired/Disconnected with TV IPv4. A direct button opens the native Wi-Fi pairing and remote interface on mobile/tablet Bridge hosts, and on TV-hosted pages explains which gateway to use. It does not depend on root or accessibility being ON. The existing ALRADHY-KB TV keyboard is untouched.
