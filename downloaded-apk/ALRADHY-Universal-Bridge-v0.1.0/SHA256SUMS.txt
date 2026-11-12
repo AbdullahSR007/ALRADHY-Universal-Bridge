@@ -1,2 +1,0 @@
-8fcd2aa2e549e98fd9fb398a2f38ccd7e3758918bf07f2a23ca6aa410a49270f  ALRADHY-Universal-Bridge-Mobile-v0.1.0.apk
-43c601ae749ad216cc11e28e9c4fc964c1a46afc1ca1a2db8e2adfa6e81b4be4  ALRADHY-Universal-Bridge-TV-v0.1.0.apk
