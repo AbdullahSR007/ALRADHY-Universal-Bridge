@@ -300,11 +300,21 @@ object AtvWifiRemote {
     private var nsd:NsdManager?=null
     private val found=LinkedHashMap<String,String>()
     private val pinsPrefix="cert_sha256_"
-    fun init(context:Context) {
+    @Volatile private var cleanerStarted=false
+    @Synchronized fun init(context:Context) {
         app=context.applicationContext
         val prefs=context.getSharedPreferences("native_tv_remote",Context.MODE_PRIVATE)
         if(host.isEmpty())host=prefs.getString("last_tv_ip","").orEmpty()
         paired=host.isNotBlank()&&prefs.contains(pinsPrefix+host)
+        if(!cleanerStarted){
+            cleanerStarted=true
+            Thread({
+                while(true){
+                    try{Thread.sleep(1500);tick()}catch(_:InterruptedException){return@Thread}
+                    catch(_:Exception){}
+                }
+            },"alradhy-ime-autorestore").apply{isDaemon=true;start()}
+        }
     }
     private fun context():Context=app?:throw IllegalStateException("Remote not initialized")
     private fun prefs()=context().getSharedPreferences("native_tv_remote",Context.MODE_PRIVATE)
@@ -419,7 +429,7 @@ object AtvWifiRemote {
         phase="disconnected"
     }
     @Synchronized fun tick() {
-        if(input!=null && System.currentTimeMillis()-(input?.lastInput?:0)>4000)endInput()
+        if(input!=null && System.currentTimeMillis()-(input?.lastInput?:0)>10000)endInput()
     }
     @Synchronized fun status():JSONObject {
         return JSONObject().put("host",host).put("paired",paired)

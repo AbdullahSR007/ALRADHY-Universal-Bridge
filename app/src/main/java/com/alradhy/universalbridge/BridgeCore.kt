@@ -427,7 +427,11 @@ class BridgeService : Service() {
         } catch (_: Exception) { stopSelf() }
     }
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int = START_STICKY
-    override fun onDestroy() { BridgeRuntime.server?.stop(); BridgeRuntime.server = null; super.onDestroy() }
+    override fun onDestroy() {
+        if (BuildConfig.FLAVOR=="mobile") AtvWifiRemote.disconnect()
+        BridgeRuntime.server?.stop(); BridgeRuntime.server = null
+        super.onDestroy()
+    }
 }
 
 class BridgeAccessibilityService : AccessibilityService() {
@@ -646,21 +650,24 @@ class MainActivity : Activity() {
             }
             container.addView(nativeIp)
             button("1 · Start Wi-Fi pairing") {
+                val requestedIp=nativeIp.text.toString()
                 Thread {
-                    val msg=runCatching{AtvWifiRemote.startPair(nativeIp.text.toString())}.fold({it},{it.message?:"Pairing error"})
+                    val msg=runCatching{AtvWifiRemote.startPair(requestedIp)}.fold({it},{it.message?:"Pairing error"})
                     runOnUiThread{Toast.makeText(this,msg,Toast.LENGTH_LONG).show()}
                 }.start()
             }
             container.addView(nativeCode)
             button("2 · Confirm TV pairing code") {
+                val requestedCode=nativeCode.text.toString()
                 Thread {
-                    val msg=runCatching{AtvWifiRemote.finishPair(nativeCode.text.toString())}.fold({it},{it.message?:"Code error"})
+                    val msg=runCatching{AtvWifiRemote.finishPair(requestedCode)}.fold({it},{it.message?:"Code error"})
                     runOnUiThread{Toast.makeText(this,msg,Toast.LENGTH_LONG).show()}
                 }.start()
             }
             button("3 · Connect TV over Wi-Fi") {
+                val requestedIp=nativeIp.text.toString()
                 Thread {
-                    val msg=runCatching{AtvWifiRemote.connect(nativeIp.text.toString())}.fold({it},{it.message?:"TV connection failed"})
+                    val msg=runCatching{AtvWifiRemote.connect(requestedIp)}.fold({it},{it.message?:"TV connection failed"})
                     runOnUiThread{Toast.makeText(this,msg,Toast.LENGTH_LONG).show()}
                 }.start()
             }
