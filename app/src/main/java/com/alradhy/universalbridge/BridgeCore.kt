@@ -192,7 +192,7 @@ object BridgeRuntime {
 
 class BridgeHttpServer(private val app: Context) : NanoHTTPD(PORT) {
     private fun reply(code: Response.Status, data: JSONObject): Response =
-        newFixedLengthResponse(code, "application/json; charset=utf-8", data.toString()).apply {
+        NanoHTTPD.newFixedLengthResponse(code, "application/json; charset=utf-8", data.toString()).apply {
             addHeader("Cache-Control", "no-store")
             addHeader("X-Content-Type-Options", "nosniff")
         }
@@ -209,7 +209,7 @@ class BridgeHttpServer(private val app: Context) : NanoHTTPD(PORT) {
             val path = s.uri
             if (s.method == Method.GET && (path == "/" || path == "/index.html")) {
                 val html = app.assets.open("web/index.html").bufferedReader().use { it.readText() }
-                return newFixedLengthResponse(Response.Status.OK, "text/html; charset=utf-8", html)
+                return NanoHTTPD.newFixedLengthResponse(Response.Status.OK, "text/html; charset=utf-8", html)
                     .apply { addHeader("Cache-Control", "no-store"); addHeader("X-Content-Type-Options", "nosniff") }
             }
             if (s.method == Method.GET && path == "/api/status") {
@@ -380,9 +380,9 @@ class MainActivity : Activity() {
         }
     }
 
-    private fun label(text: String, size: Float = 16f): TextView =
+    private fun label(value: String, size: Float = 16f): TextView =
         TextView(this).apply {
-            this.text = text
+            this.text = value
             textSize = size
             setTextColor(Color.WHITE)
             setPadding(10, 13, 10, 13)
@@ -451,7 +451,7 @@ class MainActivity : Activity() {
             val next = !BridgeRuntime.rootEnabled
             AlertDialog.Builder(this)
                 .setTitle("Root Remote")
-                .setMessage("Allow paired devices to send whitelisted Android key events with root? Use only on your own TV on trusted LAN. Current status: " + if (next) "OFF" else "ON")
+                .setMessage("Allow paired devices to send whitelisted Android key events with root? Use only on your own TV on trusted LAN. New status: " + (if (next) "ON" else "OFF"))
                 .setPositiveButton(if (next) "Enable" else "Disable") { _, _ ->
                     BridgeRuntime.rootEnabled = next
                     getSharedPreferences("bridge", MODE_PRIVATE).edit().putBoolean("root", next).apply()
