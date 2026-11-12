@@ -48,3 +48,10 @@ The mobile/tablet APK now connects to the Android TV Remote Service v2 directly 
 
 ## v0.2.1 — critical Arabic / UTF-8 transport fix
 Root cause: Bridge's web fetch() sent POST `Content-Type: application/json` **without** `charset=UTF-8`. NanoHTTPD 2.3.1 defaults to US-ASCII for this request type, corrupting Arabic *before* protobuf encoding. Now every JSON POST declares `application/json; charset=UTF-8`. On any text endpoint, the server refuses missing UTF-8 instead of silently corrupting text. The mobile Wi-Fi panel includes a self-echo Arabic sample to verify transport *before* sending text to the TV. Neither TV keyboard nor TV configuration is modified. On-device Arabic rendering is not yet independently verified.
+
+## v0.2.2 Wi-Fi browser and Arabic live typing fixes
+- The **browser must open** the mobile/tablet Bridge gateway IP (port 18080), not TV Bridge IP. The browser independently pairs with the mobile/tablet Bridge PIN and must be approved in the mobile/tablet host app. The native TV Remote connection is held by the mobile/tablet Bridge app, not by Safari/Chrome.
+- A visible gateway URL and a warning on TV-hosted pages make this distinction clear. Connection closure diagnostics surface in the Wi-Fi panel.
+- A native TV Remote v2 session disables the seven-second handshake read timeout after activation to prevent disconnects during quiet periods.
+- Live typing attempts to stream Arabic composition input before the space bar, including prefix changes, using Unicode codepoint-safe deltas. Some sender keyboards may not emit their composition data before commit; those may still require pressing Space. Stop waits for queued edits.
+- Existing ALRADHY-KB on the TV remains untouched. No extra TV keyboard is registered by Bridge.
