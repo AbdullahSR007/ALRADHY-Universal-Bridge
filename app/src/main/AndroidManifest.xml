@@ -6,8 +6,6 @@
     <application
         android:allowBackup="true"
         android:label="ALRADHY Bridge"
-        android:icon="@mipmap/ic_launcher"
-        android:roundIcon="@mipmap/ic_launcher"
         android:supportsRtl="true"
         android:theme="@style/Theme.AppCompat.NoActionBar">
         

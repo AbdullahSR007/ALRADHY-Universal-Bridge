@@ -1,9 +1,6 @@
-<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="BridgeTheme" parent="android:style/Theme.Material.NoActionBar">
-        <item name="android:colorAccent">#4F7CFF</item>
-        <item name="android:windowBackground">#080B12</item>
-        <item name="android:statusBarColor">#080B12</item>
-        <item name="android:navigationBarColor">#080B12</item>
+    <style name="Theme.AppCompat.NoActionBar" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowFullscreen">false</item>
     </style>
 </resources>
