@@ -211,13 +211,16 @@ private class TvSocket(
             socket=s
         } catch(e:Exception){runCatching{s.close()};throw e}
     }
-    fun send(bytes:ByteArray)=synchronized(socket.outputStream){socket.outputStream.frame(bytes)}
+    private val writeLock=Any()
+    fun send(bytes:ByteArray)=synchronized(writeLock){socket.outputStream.frame(bytes)}
     fun read()=Fields(socket.inputStream.frame())
     fun close()=runCatching{socket.close()}
 }
 private class RemoteSession(val ssl:TvSocket,val ime:Boolean, val onFailure:(String)->Unit = {}) {
     @Volatile var ready=false
     @Volatile var closed=false
+    @Volatile var lastFailure=""
+    @Volatile var handshakeStage="Waiting for TV configuration"
     @Volatile var imeCounter=0
     @Volatile var fieldCounter=0
     @Volatile var lastInput=System.currentTimeMillis()
@@ -231,16 +234,22 @@ private class RemoteSession(val ssl:TvSocket,val ime:Boolean, val onFailure:(Str
                     val msg=ssl.read()
                     when {
                         msg.has(1) -> {
+                            handshakeStage="TV configuration received"
                             val supported=msg.msg(1)?.n(1)?.toInt()?:0
                             val active=supported and offered
                             activeFeatures=active
                             require(active and 2!=0){"TV remote service doesn't support key commands"}
                             if(ime) require(active and 4!=0){"TV remote service doesn't support native text"}
+                            // Android TV Remote Service v2 expects unknown2 to be "1".
+                            // Keep the standard client identity fields used by interoperable remotes.
                             val device=Pb().s(1,"ALRADHY Bridge").s(2,"ALRADHY").n(3,1)
-                                .s(4,"Android").s(5,"com.alradhy.universalbridge.mobile").s(6,"0.2.0")
+                                .s(4,"1").s(5,"atvremote").s(6,"1.0.0")
                             ssl.send(Pb().m(1,Pb().n(1,active).m(2,device)).bytes())
                         }
-                        msg.has(2) -> ssl.send(Pb().m(2,Pb().n(1,activeFeatures)).bytes())
+                        msg.has(2) -> {
+                            handshakeStage="TV activating remote features"
+                            ssl.send(Pb().m(2,Pb().n(1,activeFeatures)).bytes())
+                        }
                         msg.has(8) -> ssl.send(Pb().m(9,Pb().n(1,msg.msg(8)?.n(1)?:0)).bytes())
                         msg.has(20) -> {
                             val state=msg.msg(20)
@@ -256,18 +265,33 @@ private class RemoteSession(val ssl:TvSocket,val ime:Boolean, val onFailure:(Str
                             if(imeCounter==0)imeCounter=(state?.n(1)?:0).toInt()
                             if(fieldCounter==0)fieldCounter=(state?.n(2)?:0).toInt()
                         }
-                        msg.has(40) -> {ssl.socket.soTimeout=0;ready=true;latch.countDown()}
-                        msg.has(3) -> throw IllegalStateException("TV remote protocol rejected a message")
+                        msg.has(40) -> {
+                            handshakeStage="Ready"
+                            ssl.socket.soTimeout=0
+                            ready=true
+                            latch.countDown()
+                        }
+                        msg.has(3) -> {
+                            val remoteError=msg.msg(3)?.n(1)?:0L
+                            if(remoteError != 0L) throw IllegalStateException(
+                                "TV Remote Service rejected handshake or command (remote error="+remoteError+")")
+                        }
                     }
                 }
             }catch(ex:Exception){
-                if(!closed)onFailure(ex.message ?: "Native remote disconnected")
+                if(!closed) {
+                    lastFailure=(ex.javaClass.simpleName+": "+(ex.message ?: "Remote disconnected"))
+                    onFailure(handshakeStage+": "+lastFailure)
+                }
             }finally{
                 closed=true;ready=false;latch.countDown();ssl.close()
             }
         },"alradhy-tv-v2-"+if(ime)"ime" else "keys").apply{isDaemon=true;start()}
-        if(!latch.await(7,TimeUnit.SECONDS)||!ready){
-            close();throw IllegalStateException("TV remote connection not ready")
+        if(!latch.await(10,TimeUnit.SECONDS)||!ready){
+            val reason=lastFailure.ifBlank{"Timeout waiting for TV remote start"}
+            val where=handshakeStage
+            close()
+            throw IllegalStateException(where+": "+reason)
         }
     }
     fun key(code:Int) {
@@ -382,14 +406,30 @@ object AtvWifiRemote {
         if(keys?.ready==true)return "Already connected"
         keys?.close()
         val pin=prefs().getString(pinsPrefix+host,null)?:error("TV not paired")
-        val session=RemoteSession(TvSocket(identity(),host,6466,pin),false) { err ->
-            lastError="Wi-Fi Remote connection closed: "+err.take(160)
-            phase="connection_lost"
+        phase="opening_tls_6466"
+        lastError=""
+        try {
+            val socket=TvSocket(identity(),host,6466,pin)
+            phase="waiting_tv_remote"
+            val session=RemoteSession(socket,false) { err ->
+                lastError="Wi-Fi Remote connection closed: "+err.take(220)
+                phase="connection_lost"
+            }
+            session.start()
+            keys=session
+            phase="connected"
+            lastError=""
+            prefs().edit().putString("last_tv_ip",host).apply()
+            return "TV connected over native Wi-Fi Remote v2"
+        }catch(ex:Exception){
+            keys?.close()
+            keys=null
+            val stage=phase
+            val message=ex.javaClass.simpleName+": "+(ex.message?:"TV reset connection")
+            phase="error"
+            lastError="Connect ($stage): "+message.take(240)
+            throw IllegalStateException(lastError,ex)
         }
-        session.start()
-        keys=session;phase="connected";lastError=""
-        prefs().edit().putString("last_tv_ip",host).apply()
-        return "TV connected over native Wi-Fi Remote v2"
     }
     @Synchronized fun key(name:String):String {
         val code=mapOf("HOME" to 3,"BACK" to 4,"UP" to 19,"DOWN" to 20,

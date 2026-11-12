@@ -61,3 +61,6 @@ The mobile/tablet app displays **📡 فتح ريموت Wi-Fi الآن** at the 
 
 ## v0.2.4 — Wi-Fi Remote status in Devices & Sessions
 Wi-Fi Remote now has its **own status stat in the Devices & Sessions section** beside Root Remote and Accessibility: Connected/Paired/Disconnected with TV IPv4. A direct button opens the native Wi-Fi pairing and remote interface on mobile/tablet Bridge hosts, and on TV-hosted pages explains which gateway to use. It does not depend on root or accessibility being ON. The existing ALRADHY-KB TV keyboard is untouched.
+
+## v0.2.5 — Native Wi-Fi Remote Connection reset diagnostics
+The Remote v2 TLS connection after successful pairing now uses the standard RemoteDeviceInfo unknown2="1", package_name="atvremote", app_version="1.0.0". This fixes a handshake interoperability mismatch in v0.2.4 (previously unknown2="Android"). All socket writes are serialized on a stable mutex to avoid protobuf framing interleaving. Connection failure messages now identify the stage (TLS port 6466, TV configure, active features, ready) and exception. The TV's RemoteError message only disconnects the app if error.value is true. Pairing keys and TV ALRADHY-KB are preserved unchanged. Device verification is still required.
