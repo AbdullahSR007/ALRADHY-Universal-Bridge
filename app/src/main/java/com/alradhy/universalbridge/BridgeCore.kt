@@ -36,6 +36,23 @@ data class PendingPair(
 )
 data class PairedSession(val client: String, @Volatile var lastUsed: Long, val expiresAt: Long = Long.MAX_VALUE)
 
+/** Whitelisted Android key codes shared by Wi-Fi Remote v2, TV Hub and root fallback. */
+object BridgeKeys {
+    val ALL: Map<String, Int> = buildMap {
+        putAll(mapOf(
+            "HOME" to 3, "BACK" to 4, "UP" to 19, "DOWN" to 20, "LEFT" to 21, "RIGHT" to 22,
+            "OK" to 23, "VOL_UP" to 24, "VOL_DOWN" to 25, "POWER" to 26, "MENU" to 82,
+            "SEARCH" to 84, "PLAY_PAUSE" to 85, "STOP" to 86, "MEDIA_NEXT" to 87,
+            "MEDIA_PREV" to 88, "REWIND" to 89, "FAST_FORWARD" to 90, "MUTE" to 164,
+            "INFO" to 165, "CH_UP" to 166, "CH_DOWN" to 167, "GUIDE" to 172,
+            "CAPTIONS" to 175, "SETTINGS" to 176, "TV_INPUT" to 178, "APPS" to 284,
+            "DEL" to 67, "ENTER" to 66
+        ))
+        for (d in 0..9) put("DIGIT_$d", 7 + d)
+    }
+    fun code(name: String): Int? = ALL[name]
+}
+
 object BridgeRuntime {
     @Volatile var server: BridgeHttpServer? = null
     @Volatile var pairingPin: String = newPin()
@@ -219,12 +236,7 @@ object BridgeRuntime {
             "HOME" to AccessibilityService.GLOBAL_ACTION_HOME,
             "UP" to 16, "DOWN" to 17, "LEFT" to 18, "RIGHT" to 19, "OK" to 20
         )
-        val eventCodes = mapOf(
-            "BACK" to 4, "HOME" to 3, "UP" to 19, "DOWN" to 20,
-            "LEFT" to 21, "RIGHT" to 22, "OK" to 23,
-            "PLAY_PAUSE" to 85, "VOL_UP" to 24,
-            "VOL_DOWN" to 25, "MUTE" to 164, "POWER" to 26, "MENU" to 82
-        )
+        val eventCodes = BridgeKeys.ALL
         if (!eventCodes.containsKey(key)) return Pair(false, "Unknown key")
         val accessibility = BridgeAccessibilityService.instance
         val action = actions[key]
@@ -358,7 +370,7 @@ class BridgeHttpServer(private val app: Context) : NanoHTTPD(PORT) {
                 return reply(Response.Status.OK, okay(
                     "name" to "ALRADHY Universal Bridge",
                     "platform" to if (TvHubDirect.enabled()) "Android TV Direct Hub" else if (BuildConfig.FLAVOR == "tv") "Android TV" else "Android",
-                    "version" to "0.3.0-beta1",
+                    "version" to "0.3.1",
                     "accessibility" to (BridgeAccessibilityService.instance != null),
                     "imeReady" to BridgeImeService.isReady(),
                     "root" to BridgeRuntime.rootEnabled,
@@ -725,15 +737,17 @@ class BridgeImeService : InputMethodService() {
 class MainActivity : Activity() {
     private lateinit var container: LinearLayout
     private lateinit var statusText: TextView
+    private lateinit var pinText: TextView
+    private lateinit var urlText: TextView
     private var showingId: String? = null
     private val handler = Handler(Looper.getMainLooper())
     private val ticker = object : Runnable {
         override fun run() {
             if (::statusText.isInitialized) {
-                statusText.text = (if (BridgeRuntime.server != null) "● Bridge online" else "○ Bridge offline") +
-                    "\nhttp://" + BridgeRuntime.localIp() + ":" + PORT +
-                    "\nPairing PIN: " + BridgeRuntime.pairingPin +
-                    "\nConnected sessions: " + BridgeRuntime.sessions.size +
+                pinText.text = BridgeRuntime.pairingPin.chunked(3).joinToString("  ")
+                urlText.text = "http://" + BridgeRuntime.localIp() + ":" + PORT
+                statusText.text = (if (BridgeRuntime.server != null) "● Bridge online · متصل" else "○ Bridge offline · متوقف") +
+                    "\nالجلسات المتصلة: " + BridgeRuntime.sessions.size +
                     (if (TvHubDirect.available()) {
                         val native = TvHubDirect.status()
                         "\n📡 Native Wi-Fi Remote: " + (if (native.optBoolean("connected")) "Connected ✓" else
@@ -747,22 +761,70 @@ class MainActivity : Activity() {
         }
     }
 
-    private fun label(value: String, size: Float = 16f): TextView =
+    private fun dp(v: Int): Int = (v * resources.displayMetrics.density).toInt()
+    private fun rounded(color: Int, radius: Int, stroke: Int = 0, strokeColor: Int = 0) =
+        android.graphics.drawable.GradientDrawable().apply {
+            setColor(color); cornerRadius = dp(radius).toFloat()
+            if (stroke > 0) setStroke(dp(stroke), strokeColor)
+        }
+    private fun label(value: String, size: Float = 16f, color: Int = Color.rgb(226, 232, 244)): TextView =
         TextView(this).apply {
             this.text = value
             textSize = size
-            setTextColor(Color.WHITE)
-            setPadding(10, 13, 10, 13)
-            isFocusable = true
+            setTextColor(color)
+            setLineSpacing(0f, 1.15f)
+            setPadding(dp(4), dp(6), dp(4), dp(6))
+            isFocusable = false
         }
-    private fun button(text: String, action: () -> Unit) {
+    private fun section(title: String, note: String? = null) {
+        container.addView(label(title, 20f, Color.rgb(160, 186, 255)).apply {
+            setTypeface(typeface, android.graphics.Typeface.BOLD)
+            setPadding(dp(4), dp(22), dp(4), dp(4))
+        })
+        if (note != null) container.addView(label(note, 14f, Color.rgb(147, 160, 184)))
+    }
+    /** Large, high-contrast buttons with an obvious focus ring for TV D-pad navigation. */
+    private fun button(text: String, primary: Boolean = false, danger: Boolean = false, action: () -> Unit) {
+        val normal: android.graphics.drawable.Drawable = when {
+            primary -> android.graphics.drawable.GradientDrawable(
+                android.graphics.drawable.GradientDrawable.Orientation.LEFT_RIGHT,
+                intArrayOf(Color.rgb(79, 124, 255), Color.rgb(124, 92, 255))).apply { cornerRadius = dp(16).toFloat() }
+            danger -> rounded(Color.rgb(58, 27, 39), 16, 1, Color.rgb(109, 50, 72))
+            else -> rounded(Color.rgb(27, 37, 56), 16, 1, Color.rgb(51, 69, 106))
+        }
+        val states = android.graphics.drawable.StateListDrawable().apply {
+            addState(intArrayOf(android.R.attr.state_pressed), rounded(Color.rgb(46, 74, 143), 16, 3, Color.WHITE))
+            addState(intArrayOf(android.R.attr.state_focused), rounded(Color.rgb(46, 74, 143), 16, 3, Color.WHITE))
+            addState(intArrayOf(), normal)
+        }
         val b = Button(this).apply {
             this.text = text
             isAllCaps = false
+            textSize = 16f
+            setTextColor(if (danger) Color.rgb(255, 194, 201) else Color.WHITE)
+            background = states
+            stateListAnimator = null
+            minHeight = dp(54)
+            setPadding(dp(18), dp(12), dp(18), dp(12))
             setOnClickListener { action() }
             isFocusable = true
+            setOnFocusChangeListener { v, has -> v.animate().scaleX(if (has) 1.02f else 1f).scaleY(if (has) 1.04f else 1f).setDuration(120).start() }
         }
-        container.addView(b, LinearLayout.LayoutParams(-1, -2))
+        container.addView(b, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(8) })
+    }
+    private fun styledInput(hintText: String, value: String): EditText = EditText(this).apply {
+        hint = hintText
+        setText(value)
+        setSingleLine(true)
+        textSize = 17f
+        setTextColor(Color.WHITE)
+        setHintTextColor(Color.rgb(120, 132, 156))
+        background = android.graphics.drawable.StateListDrawable().apply {
+            addState(intArrayOf(android.R.attr.state_focused), rounded(Color.rgb(14, 20, 32), 14, 2, Color.rgb(79, 124, 255)))
+            addState(intArrayOf(), rounded(Color.rgb(14, 20, 32), 14, 1, Color.rgb(51, 69, 106)))
+        }
+        setPadding(dp(16), dp(14), dp(16), dp(14))
+        layoutParams = LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(10) }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -771,45 +833,78 @@ class MainActivity : Activity() {
         if(TvHubDirect.available())AtvWifiRemote.init(applicationContext)
         BridgeRuntime.rootEnabled = (BuildConfig.FLAVOR == "tv" || TvHubDirect.enabled()) &&
             getSharedPreferences("bridge", MODE_PRIVATE).getBoolean("root", false)
-        window.decorView.setBackgroundColor(Color.rgb(8, 11, 18))
-        val scroller = ScrollView(this)
+        window.decorView.setBackgroundColor(Color.rgb(7, 10, 18))
+        val scroller = ScrollView(this).apply { isFillViewport = true }
+        val wide = resources.configuration.screenWidthDp >= 720
         container = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(30, 26, 30, 30)
+            setPadding(dp(if (wide) 48 else 18), dp(20), dp(if (wide) 48 else 18), dp(36))
         }
-        scroller.addView(container)
+        val frame = FrameLayout(this)
+        frame.addView(container, FrameLayout.LayoutParams(if (wide) dp(760) else -1, -2, Gravity.CENTER_HORIZONTAL))
+        scroller.addView(frame)
         setContentView(scroller)
-        container.addView(label("ALRADHY\nUNIVERSAL BRIDGE", 28f))
-        container.addView(label("Local-first • Trusted Wi-Fi only • v0.3.0-beta1", 14f))
-        statusText = label("")
-        container.addView(statusText)
-        container.addView(label("Security: This prototype uses unencrypted local HTTP. Never share passwords or sensitive text.", 13f))
-        button("▶ Start / Restart Local Bridge") { startHost() }
-        button("■ Stop Bridge") { stopService(Intent(this, BridgeService::class.java)) }
-        button("⟳ Rotate PIN and revoke all sessions") {
+
+        // Brand row
+        val brand = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
+        brand.addView(TextView(this).apply {
+            text = "A"; textSize = 28f; setTextColor(Color.WHITE); gravity = Gravity.CENTER
+            setTypeface(typeface, android.graphics.Typeface.BOLD)
+            background = android.graphics.drawable.GradientDrawable(
+                android.graphics.drawable.GradientDrawable.Orientation.TL_BR,
+                intArrayOf(Color.rgb(79, 124, 255), Color.rgb(124, 92, 255))).apply { cornerRadius = dp(16).toFloat() }
+        }, LinearLayout.LayoutParams(dp(54), dp(54)))
+        brand.addView(LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(14), 0, dp(14), 0)
+            addView(label("ALRADHY UNIVERSAL BRIDGE", 20f, Color.WHITE).apply { setTypeface(typeface, android.graphics.Typeface.BOLD); setPadding(0, 0, 0, 0) })
+            addView(label(when { TvHubDirect.enabled() -> "TV Hub"; BuildConfig.FLAVOR == "tv" -> "Android TV"; else -> "Phone / Tablet" } +
+                " · v0.3.1 · Local-first", 13f, Color.rgb(147, 160, 184)).apply { setPadding(0, dp(2), 0, 0) })
+        })
+        container.addView(brand)
+
+        // Hero card: PIN + address, readable from the sofa
+        val hero = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(20), dp(18), dp(20), dp(18))
+            background = rounded(Color.rgb(20, 28, 44), 22, 1, Color.rgb(36, 48, 73))
+        }
+        hero.addView(label("رمز الاقتران · Pairing PIN", 13f, Color.rgb(147, 160, 184)))
+        pinText = label("", if (wide) 52f else 42f, Color.WHITE).apply {
+            setTypeface(android.graphics.Typeface.MONOSPACE, android.graphics.Typeface.BOLD)
+            letterSpacing = 0.12f
+        }
+        hero.addView(pinText)
+        hero.addView(label("افتح من أي متصفح على نفس Wi-Fi", 13f, Color.rgb(147, 160, 184)))
+        urlText = label("", if (wide) 24f else 20f, Color.rgb(160, 186, 255)).apply { textDirection = View.TEXT_DIRECTION_LTR }
+        hero.addView(urlText)
+        statusText = label("", 14f, Color.rgb(166, 236, 208))
+        hero.addView(statusText)
+        container.addView(hero, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(16) })
+        container.addView(label("⚠ نسخة تطوير: HTTP محلي غير مشفّر — لا ترسل كلمات مرور أو نصوصًا سرية.", 13f, Color.rgb(232, 197, 138)).apply { setPadding(dp(4), dp(10), dp(4), dp(2)) })
+
+        section("⚙ الجسر · Bridge")
+        button("▶ تشغيل / إعادة تشغيل الجسر · Start", primary = true) { startHost() }
+        button("■ إيقاف الجسر · Stop") { stopService(Intent(this, BridgeService::class.java)) }
+        button("⟳ تغيير PIN وإلغاء كل الجلسات · Revoke all", danger = true) {
             BridgeRuntime.revokeAll()
             Toast.makeText(this, "All sessions revoked", Toast.LENGTH_SHORT).show()
         }
         if (BuildConfig.FLAVOR=="mobile") {
-            container.addView(label("🎮 Wi-Fi REMOTE — التحكم بالتلفزيون", 23f))
-            container.addView(label("هذا الريموت يعمل عبر Wi-Fi بدون تغيير ALRADHY-KB على التلفزيون.", 15f))
-            button("📡 فتح ريموت Wi-Fi الآن · Remote + Arabic Keyboard") {
+            section("🎮 ريموت Wi-Fi · التحكم بالتلفزيون", "ريموت كامل + لوحة لمس + كتابة عربية، بدون تغيير ALRADHY-KB على التلفزيون.")
+            button("📡 فتح ريموت Wi-Fi الآن · Remote + Arabic Keyboard", primary = true) {
                 startHost()
                 openController("http://127.0.0.1:" + PORT)
             }
-            container.addView(label("لا تفتح عنوان TV Bridge القديم للتحكم؛ افتح الريموت من هذا الزر.", 13f))
+            container.addView(label("لا تفتح عنوان TV Bridge القديم للتحكم؛ افتح الريموت من هذا الزر.", 13f, Color.rgb(147, 160, 184)))
         } else {
-            button("☷ Open This Device's Web Dashboard") {
+            button("☷ فتح لوحة التحكم · Web Dashboard", primary = !TvHubDirect.enabled()) {
                 openController("http://127.0.0.1:" + PORT)
             }
         }
-        val address = EditText(this).apply {
-            hint = if (BuildConfig.FLAVOR=="mobile") "Other Bridge IP (not native TV remote)" else "TV address: 192.168.1.15"
-            setText(getSharedPreferences("bridge", MODE_PRIVATE).getString("last_host", ""))
-            setSingleLine(true)
-            setTextColor(Color.WHITE)
-            setHintTextColor(Color.LTGRAY)
-        }
+        section("🔗 جسر آخر · Other Bridge")
+        val address = styledInput(if (BuildConfig.FLAVOR=="mobile") "Other Bridge IP (not native TV remote)" else "TV address: 192.168.1.15",
+            getSharedPreferences("bridge", MODE_PRIVATE).getString("last_host", "").orEmpty())
         container.addView(address)
         button(if (BuildConfig.FLAVOR=="mobile") "📋 Legacy Bridge to another device · Clipboard only" else "🎮 Connect to TV / Other Bridge") {
             val ip = address.text.toString().trim()
@@ -821,11 +916,9 @@ class MainActivity : Activity() {
             }
         }
         if (TvHubDirect.enabled()) {
-            container.addView(label("📺 TV HUB · متصفح الكمبيوتر مباشرة", 23f))
-            container.addView(label("TV Hub address: http://"+BridgeRuntime.localIp()+":"+PORT, 20f))
-            container.addView(label("افتح العنوان من الكمبيوتر أو الآيفون على نفس Wi-Fi، ووافق على أول متصفح من شاشة هذا التلفزيون.", 16f))
-            container.addView(label("طرق التحكم: Root Remote اختياري للأزرار (بالأسفل)، أو اقتران خدمة Android TV Remote المدمجة بالتلفزيون نفسه. لا تغيير في ALRADHY-KB.", 14f))
-            button(if(BridgeRuntime.rootEnabled) "✓ Root Remote Enabled (tap to turn OFF)" else "⚙️ Enable Root Remote for direct browser buttons (Optional)") {
+            section("📺 TV HUB · تحكم مباشر من المتصفح",
+                "افتح العنوان الظاهر بالأعلى من الكمبيوتر أو الآيفون أو التاب على نفس Wi-Fi، ووافق على أول متصفح من شاشة هذا التلفزيون.\nطرق التحكم: Root Remote اختياري، أو اقتران خدمة Android TV Remote المدمجة. لا تغيير في ALRADHY-KB.")
+            button(if(BridgeRuntime.rootEnabled) "✓ Root Remote مفعّل (اضغط للإيقاف)" else "⚙️ تفعيل Root Remote لأزرار المتصفح (اختياري)", primary = !BridgeRuntime.rootEnabled) {
                 AlertDialog.Builder(this)
                     .setTitle("TV Hub — Local Root Remote")
                     .setMessage("Allow whitelisted remote key events from approved browsers on your trusted Wi-Fi? This does NOT change ALRADHY-KB or input method. Root may prompt for permission.")
@@ -837,26 +930,18 @@ class MainActivity : Activity() {
                     }
                     .setNegativeButton("Cancel",null).show()
             }
-            button("📺 فتح لوحة TV Hub") {openController("http://127.0.0.1:"+PORT)}
+            button("📺 فتح لوحة TV Hub", primary = true) {openController("http://127.0.0.1:"+PORT)}
         }
         if (TvHubDirect.available()) {
-            container.addView(label(if(TvHubDirect.enabled())"TV Hub · Optional native self-pair" else "📡 Android TV Remote v2 over Wi-Fi · No Root or TV keyboard installation", 19f))
-            container.addView(label("Pair with the built-in Android TV Remote Service on TV. ALRADHY-KB stays installed and your default.", 14f))
-            val nativeIp=EditText(this).apply {
-                hint="TV IPv4 address (e.g. 192.168.1.20)"
-                setSingleLine(true)
-                setText(if(TvHubDirect.enabled())BridgeRuntime.localIp() else AtvWifiRemote.host)
-                setTextColor(Color.WHITE)
-                setHintTextColor(Color.LTGRAY)
-            }
-            val nativeCode=EditText(this).apply {
-                hint="6-digit hexadecimal pairing code shown on TV"
-                setSingleLine(true)
-                setTextColor(Color.WHITE)
-                setHintTextColor(Color.LTGRAY)
+            section(if(TvHubDirect.enabled())"📡 TV Hub · اقتران ذاتي اختياري" else "📡 اقتران Android TV Remote v2 عبر Wi-Fi",
+                "اقتران مع خدمة الريموت المدمجة في التلفزيون. بدون Root وبدون تركيب كيبورد؛ ALRADHY-KB يبقى الافتراضي.")
+            val nativeIp=styledInput("TV IPv4 address (e.g. 192.168.1.20)",
+                if(TvHubDirect.enabled())BridgeRuntime.localIp() else AtvWifiRemote.host)
+            val nativeCode=styledInput("رمز الاقتران الظاهر على التلفزيون (6 خانات)", "").apply {
+                filters = arrayOf<android.text.InputFilter>(android.text.InputFilter.AllCaps(), android.text.InputFilter.LengthFilter(6))
             }
             container.addView(nativeIp)
-            button("1 · Start Wi-Fi pairing") {
+            button("1 · بدء الاقتران · Start pairing") {
                 val requestedIp=nativeIp.text.toString()
                 Thread {
                     val msg=runCatching{AtvWifiRemote.startPair(requestedIp)}.fold({it},{it.message?:"Pairing error"})
@@ -864,28 +949,28 @@ class MainActivity : Activity() {
                 }.start()
             }
             container.addView(nativeCode)
-            button("2 · Confirm TV pairing code") {
+            button("2 · تأكيد الرمز · Confirm code") {
                 val requestedCode=nativeCode.text.toString()
                 Thread {
                     val msg=runCatching{AtvWifiRemote.finishPair(requestedCode)}.fold({it},{it.message?:"Code error"})
                     runOnUiThread{Toast.makeText(this,msg,Toast.LENGTH_LONG).show()}
                 }.start()
             }
-            button("3 · Connect TV over Wi-Fi") {
+            button("3 · اتصال · Connect", primary = true) {
                 val requestedIp=nativeIp.text.toString()
                 Thread {
                     val msg=runCatching{AtvWifiRemote.connect(requestedIp)}.fold({it},{it.message?:"TV connection failed"})
                     runOnUiThread{Toast.makeText(this,msg,Toast.LENGTH_LONG).show()}
                 }.start()
             }
-            button("4 · Open Wi-Fi Remote & keyboard") {openController("http://127.0.0.1:"+PORT)}
-            button("Disconnect Wi-Fi remote / restore TV keyboard") {
+            button("4 · فتح الريموت والكيبورد · Open Remote") {openController("http://127.0.0.1:"+PORT)}
+            button("فصل ريموت Wi-Fi · Disconnect", danger = true) {
                 AtvWifiRemote.disconnect()
                 Toast.makeText(this,"Disconnected",Toast.LENGTH_SHORT).show()
             }
         }
         if (BuildConfig.FLAVOR == "tv") {
-        container.addView(label("ALRADHY-KB remains unchanged. For Wi-Fi Remote v2 text input use the mobile/tablet Bridge; no extra TV keyboard is required.", 14f))
+        section("🛠 Root Remote", "ALRADHY-KB remains unchanged. For Wi-Fi Remote v2 text input use the mobile/tablet Bridge; no extra TV keyboard is required.")
         button(if (BridgeRuntime.rootEnabled) "Root Remote: ON (tap to disable)" else "Root Remote: OFF (tap to opt in)") {
             val next = !BridgeRuntime.rootEnabled
             AlertDialog.Builder(this)

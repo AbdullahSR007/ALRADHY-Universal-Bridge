@@ -1,155 +1,655 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#070a12">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ALRADHY Remote">
 <title>ALRADHY Universal Bridge</title>
 <style>
-:root{--bg:#080b12;--surface:#111722;--raised:#18202d;--primary:#4f7cff;--purple:#845ef7;--green:#20c997;--red:#ff5d6c;--text:#f5f7fa;--muted:#98a2b3;--border:#293241; font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
-*{box-sizing:border-box}body{margin:0;color:var(--text);background:radial-gradient(ellipse at 60% -10%,#1a2851 0,transparent 44%),var(--bg);min-height:100vh}
-a{color:#8eabff}.wrap{max-width:1440px;margin:auto;padding:24px}.header{display:flex;gap:20px;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);padding-bottom:19px}.brand{display:flex;gap:14px;align-items:center}.logo{display:grid;place-items:center;font-weight:900;font-size:38px;color:#9bb8ff;width:62px;height:62px;border:2px solid #6789ff;border-radius:20px;box-shadow:0 0 25px #4f7cff55;line-height:1}
-h1,h2,h3,p{margin:0}.brand h1{font-size:24px;letter-spacing:3px}.brand p,.subtitle{color:var(--muted);font-size:13px;margin-top:6px}h2{font-size:20px;margin-bottom:14px}h3{font-size:16px}.badge{border:1px solid #28644e;border-radius:100px;color:var(--green);padding:8px 12px;font-size:13px}.hero{display:flex;justify-content:space-between;align-items:center;gap:20px;margin:25px 0;flex-wrap:wrap}.hero h2{font-size:26px;margin-bottom:8px}.hero p{color:var(--muted)}.security{border-inline-start:3px solid #ffb020;background:#ffb0200d;color:#ebc58c;padding:12px 16px;margin:16px 0;border-radius:7px;font-size:13px}
-.grid{display:grid;grid-template-columns:minmax(270px,.95fr) minmax(320px,1.15fr) minmax(270px,.95fr);gap:18px}.stack{display:grid;gap:18px}.card{border:1px solid var(--border);border-radius:18px;background:linear-gradient(160deg,#162034ee,#101621);padding:22px;box-shadow:0 12px 35px #0004}.card small{color:var(--muted)}.muted{color:var(--muted)}button{font:inherit;background:#1b2944;border:1px solid #304563;border-radius:11px;padding:11px 14px;color:var(--text);cursor:pointer;transition:.15s;min-height:44px}button:hover{background:#304578;border-color:#6f94ff}button:active{transform:scale(.97)}button.primary{background:linear-gradient(105deg,#3579ff,#4164ed);border:none}button.danger{background:#452332;color:#ffc0c0;border-color:#773c52}input,textarea{font:inherit;color:var(--text);background:#080f1e;border:1px solid #35455f;border-radius:11px;padding:12px;width:100%;outline:none;direction:auto}input:focus,textarea:focus{border-color:#4f7cff}textarea{min-height:105px;resize:vertical}.rows{display:flex;gap:9px;flex-wrap:wrap}.rows>*{flex:1}.statrow{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-top:15px}.stat{border:1px solid var(--border);border-radius:12px;padding:12px;text-align:center;background:#0e1523}.stat b{display:block;font-size:23px;color:#b2c5ff}.stat span{font-size:11px;color:var(--muted)}.dpad{display:grid;grid-template-columns:repeat(3,70px);grid-template-rows:repeat(3,62px);gap:9px;justify-content:center;margin:18px auto}.dpad button{font-size:23px;background:#172542;border-radius:16px}.dpad .ok{border-radius:50%;background:#3b6cf5}.remotehead{display:flex;justify-content:space-between;align-items:center}.statusdot{height:9px;width:9px;background:var(--green);display:inline-block;border-radius:50%;margin-inline:8px}.controls{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:12px}.controls button{font-size:14px;padding:10px 4px}.logline{padding:10px 0;border-bottom:1px solid #273246;color:var(--muted);font-size:13px}.logline strong{color:var(--text);display:block}.history{max-height:180px;overflow:auto}.toolbar{display:flex;gap:10px;align-items:center}.toolbar>*{flex:1}.auth{position:fixed;inset:0;background:#050810e8;display:grid;place-items:center;z-index:10;padding:24px}.authpanel{max-width:470px;width:100%;border:1px solid #395185;background:linear-gradient(145deg,#1a2440,#10151f);border-radius:22px;padding:28px;box-shadow:0 25px 80px #000a}.authpanel h2{font-size:24px}.authpanel p{color:var(--muted);line-height:1.7;margin:10px 0 18px}.authpanel input{margin:6px 0 13px}.code{font-size:27px;letter-spacing:9px;text-align:center;direction:ltr}.hide{display:none!important}.feedback{padding:11px 0;min-height:20px;font-size:13px;color:var(--green)}.foot{color:#68748a;text-align:center;margin:28px 0;font-size:12px}.section-note{font-size:12px;color:var(--muted);margin-top:11px;line-height:1.8}
-@media(max-width:1060px){.grid{grid-template-columns:1fr 1fr}.grid>.stack:last-child{grid-column:1/-1}.hero h2{font-size:22px}}
-@media(max-width:680px){.wrap{padding:15px}.header{align-items:flex-start}.brand h1{font-size:18px}.logo{width:49px;height:49px;font-size:31px}.grid{grid-template-columns:1fr}.grid>.stack:last-child{grid-column:auto}.card{padding:17px}.dpad{grid-template-columns:repeat(3,66px)}.hero{margin:19px 0}.statrow{gap:5px}}
+:root{
+  --bg:#070a12;--s1:#0e1420;--s2:#141c2c;--s3:#1b2538;--s4:#233150;--line:#243049;--line2:#33456a;
+  --pri:#4f7cff;--pri2:#7c5cff;--ok:#22c58b;--warn:#ffb020;--bad:#ff5d6c;
+  --text:#eef2f8;--muted:#93a0b8;--dim:#5f6b82;--glow:#4f7cff55;
+  --rs:1;--radius:20px;--nav:68px;
+  font-family:system-ui,-apple-system,"Segoe UI","Noto Sans Arabic",Tahoma,sans-serif;
+  color-scheme:dark;
+}
+html[data-theme="light"]{
+  --bg:#eef2f8;--s1:#ffffff;--s2:#f5f7fb;--s3:#e8edf6;--s4:#d9e2f2;--line:#d5dcea;--line2:#bfcae0;
+  --text:#121826;--muted:#5b6578;--dim:#8a93a6;--glow:#4f7cff33;color-scheme:light;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%}
+body{color:var(--text);background:radial-gradient(ellipse 90% 50% at 70% -10%,#1b2a5a55,transparent 60%),var(--bg);min-height:100vh;overscroll-behavior:none}
+html[data-theme="light"] body{background:radial-gradient(ellipse 90% 50% at 70% -10%,#c9d7ff,transparent 60%),var(--bg)}
+h1,h2,h3,p{margin:0}
+button{font:inherit;color:var(--text);cursor:pointer;border:1px solid var(--line2);background:var(--s3);border-radius:14px;min-height:46px;padding:10px 14px;transition:background .15s,border-color .15s,transform .08s,box-shadow .15s;user-select:none;-webkit-user-select:none;touch-action:manipulation}
+button:hover{border-color:var(--pri)}
+button:active,button.pressed{transform:scale(.95);background:var(--s4)}
+button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px solid var(--pri);outline-offset:2px}
+button:disabled{opacity:.5;cursor:not-allowed}
+button.primary{background:linear-gradient(120deg,var(--pri),var(--pri2));border:none;color:#fff;font-weight:600;box-shadow:0 6px 20px var(--glow)}
+button.danger{background:#3a1b27;border-color:#6d3248;color:#ffc2c9}
+html[data-theme="light"] button.danger{background:#ffe9ec;color:#a3142b;border-color:#f2b8c2}
+button.ghost{background:transparent}
+button.okflash{box-shadow:0 0 0 3px #22c58b88}
+button.badflash{box-shadow:0 0 0 3px #ff5d6c99}
+input,textarea,select{font:inherit;color:var(--text);background:var(--s1);border:1px solid var(--line2);border-radius:14px;padding:12px 14px;width:100%;outline:none;direction:auto}
+input:focus,textarea:focus,select:focus{border-color:var(--pri);box-shadow:0 0 0 3px var(--glow)}
+textarea{min-height:120px;resize:vertical;line-height:1.6}
+label{font-size:13px;color:var(--muted);display:block;margin:12px 0 6px}
+.hide{display:none!important}
+.muted{color:var(--muted)}
+.ltr{direction:ltr;unicode-bidi:isolate}
+
+/* ---------- App bar ---------- */
+.appbar{background:rgba(7,10,18,.92);position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;padding:calc(10px + env(safe-area-inset-top)) 16px 10px;background:color-mix(in srgb,var(--bg) 82%,transparent);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.logo{flex:none;display:grid;place-items:center;width:42px;height:42px;border-radius:14px;font-weight:900;font-size:24px;color:#fff;background:linear-gradient(135deg,var(--pri),var(--pri2));box-shadow:0 0 22px var(--glow)}
+.brand{min-width:0;flex:1}
+.brand h1{font-size:16px;letter-spacing:2.5px;white-space:nowrap}
+.brand p{font-size:11.5px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pills{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:6px 10px;border-radius:999px;border:1px solid var(--line2);background:var(--s2);white-space:nowrap}
+.pill i{width:8px;height:8px;border-radius:50%;background:var(--dim);display:inline-block}
+.pill.on i{background:var(--ok);box-shadow:0 0 8px var(--ok)}
+.pill.mid i{background:var(--warn)}
+.pill.off i{background:var(--bad)}
+.lat{font-variant-numeric:tabular-nums;color:var(--muted)}
+
+/* ---------- Layout ---------- */
+.shell{max-width:1360px;margin:0 auto;padding:16px 16px calc(var(--nav) + 26px + env(safe-area-inset-bottom))}
+.views{display:block}
+.view{display:none;animation:fade .18s ease}
+.view.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.card{background:linear-gradient(160deg,var(--s2),var(--s1));border:1px solid var(--line);border-radius:var(--radius);padding:18px;box-shadow:0 10px 30px #0003;margin-bottom:14px}
+html[data-theme="light"] .card{box-shadow:0 6px 20px #1a2a5a14}
+.card h2{font-size:18px;margin-bottom:4px;display:flex;align-items:center;gap:8px}
+.card h3{font-size:14px;margin:16px 0 8px}
+.sub{font-size:13px;color:var(--muted);line-height:1.7}
+.row{display:flex;gap:9px;flex-wrap:wrap}
+.row>*{flex:1 1 0;min-width:0}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.note{font-size:12px;color:var(--muted);line-height:1.8;margin-top:10px}
+.feedback{font-size:13px;min-height:18px;margin-top:8px;color:var(--ok);line-height:1.6}
+.warnbox{border-inline-start:3px solid var(--warn);background:#ffb0200f;color:#e8c58a;padding:11px 14px;border-radius:10px;font-size:12.5px;line-height:1.7;margin-bottom:14px}
+html[data-theme="light"] .warnbox{color:#7a5200}
+.okbox{border-inline-start:3px solid var(--ok);background:#22c58b12;color:#a6ecd0;padding:11px 14px;border-radius:10px;font-size:13px;line-height:1.7}
+html[data-theme="light"] .okbox{color:#0b6b48}
+
+/* ---------- Remote ---------- */
+.remote{max-width:calc(430px * var(--rs));margin:0 auto}
+.tvcard{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:16px;background:var(--s2);border:1px solid var(--line);margin-bottom:14px}
+.tvicon{font-size:26px;width:46px;height:46px;border-radius:13px;display:grid;place-items:center;background:var(--s3)}
+.tvcard .meta{flex:1;min-width:0}
+.tvcard b{display:block;font-size:14px}
+.tvcard span{font-size:12px;color:var(--muted)}
+.tvcard button{min-height:38px;padding:6px 12px;font-size:13px}
+.toprow{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}
+.k{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:calc(60px * var(--rs));padding:6px 4px;border-radius:16px;font-size:calc(21px * var(--rs));line-height:1}
+.k small{font-size:11px;color:var(--muted);font-weight:500}
+.k.power{background:#3a1520;border-color:#7a2b3d;color:#ff8f9c}
+.k.power.arm{background:var(--bad);color:#fff;animation:pulse .6s infinite alternate}
+@keyframes pulse{to{box-shadow:0 0 0 6px #ff5d6c44}}
+html[data-theme="light"] .k.power{background:#ffe5e9;color:#c4122f;border-color:#f3b3bf}
+.dpadwrap{display:grid;place-items:center;margin:20px 0}
+.dpad{position:relative;width:calc(262px * var(--rs));aspect-ratio:1;border-radius:50%;direction:ltr;background:radial-gradient(circle at 50% 40%,var(--s4),var(--s2) 70%);border:1px solid var(--line2);box-shadow:inset 0 2px 14px #0005,0 14px 40px #0005}
+html[data-theme="light"] .dpad{box-shadow:inset 0 2px 10px #0001,0 10px 30px #1a2a5a22}
+.dpad button{position:absolute;border:none;background:transparent;font-size:calc(26px * var(--rs));color:var(--text);border-radius:22px;min-height:0;padding:0}
+.dpad button:active,.dpad button.pressed{background:#ffffff14;transform:none}
+.dpad .up{top:2%;left:31%;width:38%;height:29%}
+.dpad .down{bottom:2%;left:31%;width:38%;height:29%}
+.dpad .left{left:2%;top:31%;width:29%;height:38%}
+.dpad .right{right:2%;top:31%;width:29%;height:38%}
+.dpad .ok{top:31%;left:31%;width:38%;height:38%;border-radius:50%;background:linear-gradient(140deg,var(--pri),var(--pri2));color:#fff;font-weight:800;font-size:calc(20px * var(--rs));box-shadow:0 6px 22px var(--glow),inset 0 1px 0 #ffffff40}
+.dpad .ok:active,.dpad .ok.pressed{transform:scale(.94);background:linear-gradient(140deg,#3b66f0,#6a48f0)}
+.navrow{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.rockers{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center;margin:16px 0}
+.rocker{display:flex;flex-direction:column;border:1px solid var(--line2);border-radius:22px;overflow:hidden;background:var(--s3)}
+.rocker button{border:none;border-radius:0;background:transparent;min-height:calc(56px * var(--rs));font-size:calc(22px * var(--rs))}
+.rocker button+button{border-top:1px solid var(--line2)}
+.rocker .cap{font-size:11px;color:var(--muted);text-align:center;padding:4px 0;background:var(--s2)}
+.midkeys{display:flex;flex-direction:column;gap:9px}
+.midkeys .k{min-width:calc(78px * var(--rs))}
+.media{display:grid;grid-template-columns:repeat(5,1fr);gap:7px}
+.media button{min-height:calc(50px * var(--rs));padding:4px;font-size:calc(19px * var(--rs));border-radius:14px}
+details.more{margin-top:14px;border:1px solid var(--line);border-radius:16px;background:var(--s2)}
+details.more summary{cursor:pointer;padding:13px 16px;font-size:14px;list-style:none;display:flex;justify-content:space-between}
+details.more summary::-webkit-details-marker{display:none}
+details.more summary::after{content:"▾";color:var(--muted)}
+details.more[open] summary::after{content:"▴"}
+.numpad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:0 14px 14px;direction:ltr}
+.numpad button{font-size:20px;min-height:50px}
+.remoteMsg{text-align:center}
+
+/* ---------- Touchpad ---------- */
+.pad{position:relative;margin-top:12px;height:min(58vh,480px);border-radius:24px;border:1px solid var(--line2);background:
+  radial-gradient(circle at 50% 50%,#4f7cff12,transparent 60%),
+  repeating-linear-gradient(0deg,transparent 0 31px,#ffffff06 31px 32px),
+  repeating-linear-gradient(90deg,transparent 0 31px,#ffffff06 31px 32px),var(--s1);
+  touch-action:none;user-select:none;-webkit-user-select:none;overflow:hidden;cursor:grab}
+.pad .hint{position:absolute;inset:0;display:grid;place-items:center;text-align:center;color:var(--dim);font-size:13px;line-height:2;pointer-events:none;padding:20px}
+.pad .hint b{display:block;font-size:15px;letter-spacing:4px;color:var(--muted)}
+.dot{position:absolute;width:56px;height:56px;margin:-28px 0 0 -28px;border-radius:50%;background:radial-gradient(circle,#4f7cff88,#4f7cff00 70%);pointer-events:none;opacity:0;transition:opacity .2s}
+.dot.on{opacity:1}
+.dirflash{position:absolute;inset:0;display:grid;place-items:center;font-size:70px;color:#4f7cff;opacity:0;pointer-events:none;transition:opacity .25s}
+.dirflash.on{opacity:.55;transition:none}
+.padbar{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-top:12px}
+.sens{display:flex;align-items:center;gap:10px;margin-top:12px;font-size:13px;color:var(--muted)}
+.sens input{padding:0;accent-color:var(--pri)}
+
+/* ---------- Keyboard ---------- */
+.counter{font-size:12px;color:var(--dim);text-align:end;margin-top:4px;font-variant-numeric:tabular-nums}
+.chips{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}
+.chip{font-size:13px;min-height:34px;padding:5px 12px;border-radius:999px;background:var(--s3);max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.livebox{margin-top:14px;padding-top:14px;border-top:1px dashed var(--line2)}
+.liveflag{display:inline-flex;gap:6px;align-items:center;font-size:12px;color:#9cc0ff;border:1px solid #3c63c7;border-radius:999px;padding:4px 10px;margin-bottom:8px}
+.liveflag i{width:8px;height:8px;border-radius:50%;background:#4f7cff;animation:pulse .7s infinite alternate}
+#liveInput{font-size:18px;padding:16px}
+.editkeys{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}
+.toggle{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.toggle:last-child{border-bottom:none}
+.toggle span{font-size:14px}
+.toggle small{display:block;color:var(--muted);font-size:12px;margin-top:2px}
+.switch{position:relative;flex:none;width:50px;height:30px;border-radius:999px;background:var(--s4);border:1px solid var(--line2);min-height:0;padding:0}
+.switch::after{content:"";position:absolute;top:3px;inset-inline-start:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:inset-inline-start .18s}
+.switch[aria-checked="true"]{background:var(--pri);border-color:var(--pri)}
+.switch[aria-checked="true"]::after{inset-inline-start:23px}
+
+/* ---------- Devices / settings ---------- */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px}
+.stat{border:1px solid var(--line);border-radius:14px;padding:11px 6px;text-align:center;background:var(--s1)}
+.stat b{display:block;font-size:19px;color:#a9bfff}
+html[data-theme="light"] .stat b{color:#2c4fd6}
+.stat span{font-size:11px;color:var(--muted)}
+.steps{display:grid;gap:10px;margin-top:12px}
+.step{display:flex;gap:12px;align-items:flex-start;padding:12px;border-radius:14px;background:var(--s1);border:1px solid var(--line)}
+.step .n{flex:none;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:700;background:var(--s4)}
+.step .body{flex:1;min-width:0}
+.urlbox{display:flex;gap:8px;align-items:center;margin-top:10px}
+.urlbox code{flex:1;min-width:0;direction:ltr;text-align:left;font-size:15px;padding:12px;border-radius:12px;background:var(--s1);border:1px solid var(--line2);user-select:all;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.urlbox button{flex:none;min-height:44px}
+.devitem{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);font-size:14px}
+.devitem:last-child{border-bottom:none}
+.devitem small{color:var(--muted);font-size:12px;margin-inline-start:auto}
+.seg{display:flex;border:1px solid var(--line2);border-radius:12px;overflow:hidden}
+.seg button{border:none;border-radius:0;min-height:38px;padding:6px 12px;font-size:13px;background:transparent}
+.seg button[aria-pressed="true"]{background:var(--pri);color:#fff}
+.shortcuts{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:13px;margin-top:8px}
+kbd{font-family:ui-monospace,monospace;font-size:12px;padding:3px 7px;border-radius:7px;background:var(--s3);border:1px solid var(--line2);direction:ltr;display:inline-block;min-width:26px;text-align:center}
+.foot{color:var(--dim);text-align:center;font-size:11.5px;margin:20px 0 6px}
+
+/* ---------- Bottom nav ---------- */
+.tabbar{background:rgba(14,20,32,.95);position:fixed;inset-inline:0;bottom:0;z-index:30;display:flex;justify-content:center;gap:4px;padding:8px 10px calc(8px + env(safe-area-inset-bottom));background:color-mix(in srgb,var(--s1) 88%,transparent);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-top:1px solid var(--line)}
+.tabbar button{flex:1;max-width:120px;display:flex;flex-direction:column;align-items:center;gap:3px;border:none;background:transparent;min-height:52px;padding:4px 2px;border-radius:14px;color:var(--muted);font-size:11.5px;position:relative}
+.tabbar button .ic{font-size:21px;line-height:1}
+.tabbar button[aria-selected="true"]{color:var(--text);background:var(--s3)}
+.tabbar button[aria-selected="true"] .ic{filter:drop-shadow(0 0 6px var(--glow))}
+.tabbar .badge{position:absolute;top:6px;inset-inline-end:22%;width:9px;height:9px;border-radius:50%;background:var(--bad)}
+
+/* ---------- Toast ---------- */
+.toasts{position:fixed;z-index:60;inset-inline:0;bottom:calc(var(--nav) + 18px + env(safe-area-inset-bottom));display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none;padding:0 14px}
+.toast{max-width:520px;width:fit-content;padding:11px 16px;border-radius:14px;font-size:13.5px;line-height:1.6;background:#16213a;border:1px solid #2f4a86;color:#e6edff;box-shadow:0 12px 30px #0007;animation:toastin .2s ease}
+.toast.bad{background:#3a1622;border-color:#7a2c41;color:#ffd2d8}
+.toast.good{background:#10322a;border-color:#22785c;color:#c9f5e4}
+@keyframes toastin{from{opacity:0;transform:translateY(10px)}}
+
+/* ---------- Auth ---------- */
+.auth{background:rgba(7,10,18,.96);position:fixed;inset:0;z-index:80;display:grid;place-items:center;padding:20px;background:color-mix(in srgb,var(--bg) 94%,transparent);backdrop-filter:blur(10px)}
+.authpanel{width:100%;max-width:440px;border-radius:26px;padding:26px;background:linear-gradient(150deg,var(--s3),var(--s1));border:1px solid var(--line2);box-shadow:0 30px 90px #000a}
+.authpanel .logo{width:60px;height:60px;font-size:34px;border-radius:20px;margin-bottom:14px}
+.authpanel h2{font-size:22px}
+.authpanel p{color:var(--muted);line-height:1.8;margin:8px 0 6px;font-size:14px}
+.code{font-size:30px;letter-spacing:12px;text-align:center;direction:ltr;font-variant-numeric:tabular-nums;padding:14px}
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid #ffffff44;border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;vertical-align:-3px;margin-inline-end:6px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ---------- Wide screens (tablet landscape / PC) ---------- */
+@media (min-width:1024px){
+  .shell{padding-bottom:30px}
+  .views{display:grid;grid-template-columns:minmax(380px,440px) 1fr;gap:20px;align-items:start}
+  #view-remote{display:block!important;position:sticky;top:84px;grid-row:1/span 6;animation:none}
+  .tabbar{position:relative;top:auto;bottom:auto;inset-inline:auto;z-index:15;justify-content:flex-start;border:1px solid var(--line);border-radius:18px;padding:6px;margin-bottom:14px;background:var(--s1)}
+  .tabbar [data-tab="remote"]{display:none}
+  .tabbar button{flex-direction:row;justify-content:center;gap:8px;font-size:14px;min-height:46px;max-width:none}
+  .tabbar .badge{top:8px;inset-inline-end:10px}
+  .toasts{bottom:24px}
+  .pad{height:440px}
+}
+@media (max-width:420px){
+  .brand p{display:none}
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .pill .lbl{display:none}
+}
+@media (hover:none) and (pointer:coarse){#shortcutsCard{display:none}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
-<div class="wrap">
-<header class="header"><div class="brand"><div class="logo">A</div><div><h1>ALRADHY</h1><p>UNIVERSAL BRIDGE · جسر واحد، كل أجهزتك</p></div></div><span class="badge" id="bridgeStatus">● Connecting...</span></header>
-<div class="hero"><div><h2>نصوصك، أجهزتك .. في مكان واحد</h2><p>Your Content. Your Devices. One Place.</p></div><div class="badge">v0.3.0-beta1 • Local First</div></div>
-<nav class="rows" style="margin-bottom:16px">
-<button id="wifiQuickAccess" class="primary">📡 Wi-Fi Remote · فتح الريموت</button>
-<button id="keyboardQuickAccess">⌨ الكتابة العربية</button>
+<header class="appbar">
+  <div class="logo">A</div>
+  <div class="brand"><h1>ALRADHY</h1><p>UNIVERSAL BRIDGE · جسر واحد لكل أجهزتك</p></div>
+  <div class="pills">
+    <span class="pill" id="bridgePill"><i></i><span class="lbl" id="bridgeStatus">جارٍ الاتصال…</span></span>
+    <span class="pill" id="tvPill"><i></i><span id="tvPillText">📺 —</span><span class="lat" id="latency"></span></span>
+  </div>
+</header>
+
+<main class="shell">
+<div class="warnbox hide" id="tvBrowserWarning">هذه واجهة جسر التلفزيون القديم. ريموت Wi-Fi الأصلي يعمل من تطبيق Bridge على الجوال/التابلت أو من TV Hub. افتح عنوان الجهاز الصحيح على المنفذ 18080.</div>
+
+<nav class="tabbar" id="tabbar" role="tablist">
+  <button role="tab" data-tab="remote" aria-selected="true"><span class="ic">🎮</span>الريموت</button>
+  <button role="tab" data-tab="touch" aria-selected="false"><span class="ic">🖐</span>اللمس</button>
+  <button role="tab" data-tab="keyboard" aria-selected="false"><span class="ic">⌨</span>الكتابة</button>
+  <button role="tab" data-tab="clip" aria-selected="false"><span class="ic">📋</span>الحافظة<span class="badge hide" id="clipBadge"></span></button>
+  <button role="tab" data-tab="more" aria-selected="false"><span class="ic">⚙️</span>الإعدادات</button>
 </nav>
-<div class="feedback" id="wifiQuickMessage"></div>
-<div class="security hide" id="tvBrowserWarning">هذه واجهة التلفزيون. ريموت Wi-Fi الأصلي يعمل من واجهة Bridge المستضافة على التابلت/الجوال. افتح IP التابلت على المنفذ 18080 في المتصفح، وليس IP التلفزيون.</div><div class="security">نسخة تطوير: الاتصال المحلي HTTP غير مشفّر. استخدم شبكة منزلية موثوقة فقط، ولا ترسل كلمات مرور أو نصوصًا سرية. المزامنة يدويّة في هذه النسخة.</div>
-<div class="grid">
-<section class="stack">
-  <div class="card hide" id="nativeWifiCard">
-   <h2>📡 ريموت Android TV عبر Wi-Fi</h2>
-   <p class="section-note">من التابلت أو الهاتف: اقتران آمن مباشرة مع خدمة ريموت التلفزيون المدمجة. لا يلزم Root أو تركيب كيبورد جديد على التلفزيون.</p>
-   <p class="section-note hide" id="browserRelayHelp" style="font-size:14px;color:#b8edc8">✓ ريموت المتصفح يستخدم اتصال Wi-Fi Remote الذي يعمل داخل تطبيق التابلت. الأزرار متاحة أسفل الصفحة؛ لا تحتاج إعادة اقتران التلفزيون.</p>
-   <div id="nativeAdvancedControls">
-   <label>TV IPv4</label><input id="nativeTvIp" type="text" inputmode="decimal" placeholder="192.168.1.20" style="margin:7px 0"/>
-   <div class="rows"><button id="nativeScan">اكتشاف التلفزيونات</button><button class="primary" id="nativePairStart">بدء الاقتران</button></div>
-   <select id="nativeFound" style="margin-top:8px"><option value="">الأجهزة المكتشفة...</option></select>
-   <label style="display:block;margin-top:12px">رمز التلفزيون (ستة أرقام/أحرف)</label>
-   <input id="nativePairCode" type="text" inputmode="text" maxlength="6" placeholder="A1B2C3" style="margin:7px 0;direction:ltr;text-align:center;letter-spacing:5px"/>
-   <div class="rows"><button id="nativePairFinish">تأكيد الرمز</button><button class="primary" id="nativeConnect">اتصال</button></div>
-   <button id="nativeDisconnect" class="danger" style="margin-top:10px;width:100%">فصل Wi-Fi Remote وإعادة كيبورد التلفزيون</button>
-   </div>
-   <button id="nativeArabicTest" style="margin-top:10px;width:100%">اختبار سلامة العربية قبل إرسالها للتلفزيون</button>
-   <div class="feedback" id="nativeMsg"></div><p id="nativeState" class="section-note">غير متصل</p>
-   <p class="section-note">للكمبيوتر وiPhone: افتح عنوان Bridge على التابلت. في أول استخدام فقط وافق على وصول المتصفح من شاشة التابلت. المتصفح يعيد استخدام اتصال التلفزيون المحفوظ، ويحتفظ بالإذن لمدة 30 يومًا أو حتى تسحبه.</p><div id="nativeGatewayUrl" class="feedback" style="direction:ltr;user-select:text"></div>
+
+<div class="views">
+<!-- ============ REMOTE ============ -->
+<section class="view active" id="view-remote" role="tabpanel">
+ <div class="card remote">
+  <div class="tvcard">
+    <div class="tvicon">📺</div>
+    <div class="meta"><b id="tvName">التلفزيون</b><span id="remoteState">جاهز</span></div>
+    <button id="wifiQuickAccess" class="ghost">⚙ الاتصال</button>
   </div>
-  <div class="card"><h2>الأجهزة والجلسات</h2><p class="subtitle">الأجهزة المتصلة بهذا الجسر</p><div class="statrow"><div class="stat"><b id="deviceCount">0</b><span>جلسات فعالة</span></div><div class="stat"><b id="accessState">—</b><span>Accessibility</span></div><div class="stat"><b id="rootState">—</b><span>Root Remote</span></div><div class="stat" id="nativeWifiStatCard"><b id="nativeWifiStat" style="font-size:19px">—</b><span>📡 Wi-Fi Remote</span><div id="nativeWifiTvIp" class="section-note">فحص الاتصال...</div></div></div><button id="nativeWifiStatOpen" style="width:100%;margin:12px 0 6px">🎮 فتح ريموت Wi-Fi / تفاصيل الاتصال</button><div id="deviceList" class="history" style="margin-top:12px"></div><div class="section-note">يطلب كل جهاز جديد موافقةً صريحة من شاشة الجهاز المضيف.</div></div>
-  <div class="card"><h2>التحكم الآمن</h2><p class="section-note">الريموت الأصلي عبر Wi-Fi يعمل من نسخة الهاتف/التابلت دون Root أو كيبورد إضافي. خدمة التلفزيون قد تبدّل الإدخال مؤقتًا عند إرسال النص ثم تعيده تلقائيًا عند انتهاء الجلسة.</p><button class="danger" id="disconnect" style="margin-top:15px;width:100%">فصل جلستي الحالية</button></div>
-</section>
-<section class="stack">
-  <div class="card"><div class="remotehead"><h2>🎮 ريموت التلفزيون</h2><span class="muted" id="remoteState">جاهز</span></div><div class="controls"><button data-key="POWER">⏻ Power</button><button data-key="HOME">⌂ Home</button><button data-key="MENU">☰ Menu</button></div>
-    <div class="dpad"><span></span><button data-key="UP">▲</button><span></span><button data-key="RIGHT">▶</button><button data-key="OK" class="ok">OK</button><button data-key="LEFT">◀</button><span></span><button data-key="DOWN">▼</button><span></span></div>
-    <div class="controls"><button data-key="BACK">↩ Back</button><button data-key="PLAY_PAUSE">⏯ Play</button><button data-key="MUTE">◉ Mute</button><button data-key="VOL_DOWN">− Volume</button><button data-key="VOL_UP">+ Volume</button><button id="focusText">⌨ Keyboard</button></div><div id="remoteMsg" class="feedback"></div>
-    <p class="section-note">المفاتيح ترسل أمرًا واحدًا في كل ضغطة، مع رد واضح من الجهاز المضيف.</p>
+
+  <div class="toprow">
+    <button class="k power" id="powerKey" title="Power"><span>⏻</span><small>تشغيل</small></button>
+    <button class="k" data-key="TV_INPUT" title="Input"><span>⎆</span><small>المصدر</small></button>
+    <button class="k" data-key="SEARCH" title="Search"><span>⌕</span><small>بحث</small></button>
+    <button class="k" data-key="SETTINGS" title="Settings"><span>⚙</span><small>الإعدادات</small></button>
   </div>
-  <div class="card"><h2>⌨ لوحة إدخال النص</h2>
-  <p class="subtitle">وضعان مستقلان: إرسال نص كامل أو كتابة حية من كيبورد التابلت</p>
-  <textarea id="remoteText" placeholder="اكتب نصًا كاملاً بالعربية أو الإنجليزية ثم اضغط إرسال..."></textarea>
-  <div class="rows" style="margin-top:9px">
-    <button class="primary" id="sendText">إرسال النص</button>
-    <button id="directToggle" aria-pressed="false">مباشر · تشغيل</button>
-    <button id="clearText">مسح</button>
-  </div>
-  <div id="directPanel" class="hide" style="margin-top:15px;border-top:1px solid var(--border);padding-top:15px">
-    <div class="badge" style="display:inline-block;border-color:#3683e5;color:#a0c5ff">● الكتابة المباشرة مفعّلة</div>
-    <p class="section-note">اضغط في المربع التالي ثم اكتب من كيبورد التابلت أو المتصفح. كل حرف يُرسل للحقل النشط على التلفزيون فورًا، بما فيه العربية.</p>
-    <input id="liveInput" type="text" autocomplete="off" autocorrect="off" spellcheck="false" autocapitalize="off" placeholder="اضغط هنا واكتب مباشرة على التلفزيون..." />
-    <div class="controls">
-       <button id="liveBackspace">⌫ حذف</button>
-       <button id="liveEnter">↵ Enter</button>
-       <button id="liveLeft">←</button>
-       <button id="liveRight">→</button>
+
+  <div class="dpadwrap">
+    <div class="dpad" aria-label="D-pad">
+      <button class="up" data-key="UP" data-repeat aria-label="Up">▲</button>
+      <button class="left" data-key="LEFT" data-repeat aria-label="Left">◀</button>
+      <button class="ok" data-key="OK" aria-label="OK">OK</button>
+      <button class="right" data-key="RIGHT" data-repeat aria-label="Right">▶</button>
+      <button class="down" data-key="DOWN" data-repeat aria-label="Down">▼</button>
     </div>
   </div>
-  <p class="section-note">وضع «مباشر» عبر Wi-Fi Native لا يحتاج تفعيل ALRADHY Bridge Keyboard. فتح النص يفعّل إدخال التلفزيون المدمج مؤقتًا ثم يُغلق تلقائيًا. قد تختلف استجابة بعض التطبيقات.</p>
-  <div class="feedback" id="textMsg"></div></div>
-</section>
-<section class="stack">
-  <div class="card"><h2>📋 Clipboard Hub</h2><p class="subtitle">نسخ ونقل نصوص وروابط بين الأجهزة</p><h3 style="margin:19px 0 10px">النص المُستلم على الجسر</h3><textarea id="received" readonly placeholder="لم يصل نص بعد"></textarea><div class="rows" style="margin-top:9px"><button id="copyReceived">نسخ إلى هذا الجهاز</button><button id="refreshClipboard">تحديث</button></div><h3 style="margin:20px 0 10px">مشاركة نص جديد</h3><textarea id="clipboardText" placeholder="اكتب أو الصق النص هنا..."></textarea><div class="rows" style="margin-top:9px"><button id="browserPaste">لصق من الحافظة</button><button class="primary" id="sendClipboard">إرسال للجسر</button></div><div class="feedback" id="clipboardMsg"></div><p class="section-note">بعض المتصفحات، خصوصًا Safari على HTTP، تمنع Clipboard API. يمكنك دائمًا اللصق يدويًا في مربع النص.</p></div>
-  <div class="card"><h2>ℹ️ معلومات الجسر</h2><div class="logline"><strong>Protocol</strong>LAN HTTP prototype · No cloud</div><div class="logline"><strong>Pairing</strong>PIN + host approval</div><div class="logline"><strong>Session</strong>30 min inactivity expiry</div><div class="logline"><strong>Privacy</strong>Text stays on the host / LAN</div></div>
-</section>
-</div><footer class="foot">ALRADHY Universal Bridge · Designed for Android, Android TV and modern browsers · v0.3.0-beta1</footer>
-</div>
 
-<div class="auth" id="authScreen"><div class="authpanel"><div class="brand"><div class="logo">A</div><div><h2>اقتران آمن محليًا</h2><p>ALRADHY Universal Bridge</p></div></div><p>افتح التطبيق على الجهاز المضيف، ثم أدخل رمز الاقتران الظاهر على شاشته. بعد ذلك وافق من شاشة المضيف.</p>
-  <label>اسم هذا الجهاز</label><input id="clientName" maxlength="45" placeholder="iPhone / Windows PC / Samsung Tablet">
-  <label>رمز من 6 أرقام</label><input class="code" id="pairPin" type="text" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="000000">
-  <button id="startPair" class="primary" style="width:100%">طلب الاقتران</button><div class="feedback" id="pairMsg"></div><p class="section-note">مهم: هذا الاتصال غير مشفّر بعد، ولا ينبغي استخدامه على شبكة عامة.</p></div></div>
+  <div class="navrow">
+    <button class="k" data-key="BACK"><span>↩</span><small>رجوع</small></button>
+    <button class="k" data-key="HOME"><span>⌂</span><small>الرئيسية</small></button>
+    <button class="k" data-key="MENU"><span>☰</span><small>القائمة</small></button>
+  </div>
+
+  <div class="rockers">
+    <div class="rocker"><button data-key="VOL_UP" data-repeat aria-label="Volume up">＋</button><div class="cap">الصوت</div><button data-key="VOL_DOWN" data-repeat aria-label="Volume down">−</button></div>
+    <div class="midkeys">
+      <button class="k" data-key="MUTE"><span>🔇</span><small>كتم</small></button>
+      <button class="k" id="focusText"><span>⌨</span><small>كتابة</small></button>
+    </div>
+    <div class="rocker"><button data-key="CH_UP" data-repeat aria-label="Channel up">▲</button><div class="cap">القناة</div><button data-key="CH_DOWN" data-repeat aria-label="Channel down">▼</button></div>
+  </div>
+
+  <div class="media" dir="ltr">
+    <button data-key="MEDIA_PREV" title="Previous">⏮</button>
+    <button data-key="REWIND" data-repeat title="Rewind">⏪</button>
+    <button data-key="PLAY_PAUSE" class="primary" title="Play / Pause">⏯</button>
+    <button data-key="FAST_FORWARD" data-repeat title="Fast forward">⏩</button>
+    <button data-key="MEDIA_NEXT" title="Next">⏭</button>
+  </div>
+
+  <details class="more">
+    <summary>🔢 الأرقام وأزرار إضافية</summary>
+    <div class="numpad">
+      <button data-key="DIGIT_1">1</button><button data-key="DIGIT_2">2</button><button data-key="DIGIT_3">3</button>
+      <button data-key="DIGIT_4">4</button><button data-key="DIGIT_5">5</button><button data-key="DIGIT_6">6</button>
+      <button data-key="DIGIT_7">7</button><button data-key="DIGIT_8">8</button><button data-key="DIGIT_9">9</button>
+      <button data-key="INFO" title="Info">ℹ</button><button data-key="DIGIT_0">0</button><button data-key="GUIDE" title="Guide">▦</button>
+      <button data-key="CAPTIONS" title="Captions">CC</button><button data-key="STOP" title="Stop">⏹</button><button data-key="APPS" title="All apps">▤</button>
+    </div>
+  </details>
+  <div id="remoteMsg" class="feedback remoteMsg"></div>
+ </div>
+</section>
+
+<!-- ============ TOUCHPAD ============ -->
+<section class="view" id="view-touch" role="tabpanel">
+ <div class="card">
+  <h2>🖐 لوحة اللمس</h2>
+  <p class="sub">اسحب للتنقّل · اضغط مرة = OK · ضغطة مطوّلة = رجوع · لمسة بإصبعين = الرئيسية · عجلة الماوس على الكمبيوتر = أعلى/أسفل</p>
+  <div class="pad" id="touchpad" tabindex="0" aria-label="Touchpad">
+    <div class="hint"><div><b>TOUCHPAD</b>اسحب بإصبعك أو بالماوس</div></div>
+    <div class="dirflash" id="dirFlash">▲</div>
+    <div class="dot" id="padDot"></div>
+  </div>
+  <div class="padbar">
+    <button data-key="BACK">↩ رجوع</button>
+    <button data-key="HOME">⌂ الرئيسية</button>
+    <button data-key="PLAY_PAUSE">⏯ تشغيل</button>
+    <button data-key="OK" class="primary">OK</button>
+  </div>
+  <div class="sens"><span>الحساسية</span><input type="range" id="padSens" min="1" max="10" step="1" value="5"><b id="padSensVal" class="ltr">5</b></div>
+ </div>
+</section>
+
+<!-- ============ KEYBOARD ============ -->
+<section class="view" id="view-keyboard" role="tabpanel">
+ <div class="card">
+  <h2>⌨ إرسال نص للتلفزيون</h2>
+  <p class="sub">افتح خانة الكتابة على التلفزيون أولاً، ثم اكتب أو الصق النص (عربي/إنجليزي/إيموجي) وعدّله قبل الإرسال.</p>
+  <textarea id="remoteText" maxlength="12000" placeholder="اكتب أو الصق النص هنا…  (Ctrl + Enter للإرسال)"></textarea>
+  <div class="counter"><span id="textCount" class="ltr">0</span> / 12000</div>
+  <div class="row" style="margin-top:8px">
+    <button class="primary" id="sendText">➤ إرسال النص</button>
+    <button id="pasteText">📥 لصق</button>
+    <button id="clearText">✕ مسح</button>
+  </div>
+  <div id="historyWrap" class="hide">
+    <h3>🕘 آخر النصوص المرسلة <button class="ghost" id="clearHistory" style="min-height:30px;padding:2px 10px;font-size:12px;margin-inline-start:6px">مسح السجل</button></h3>
+    <div class="chips" id="historyChips"></div>
+  </div>
+  <div class="feedback" id="textMsg"></div>
+ </div>
+
+ <div class="card">
+  <h2>⚡ الكتابة المباشرة</h2>
+  <p class="sub">كل حرف تكتبه يظهر فورًا في الخانة المفتوحة على التلفزيون، بما فيه العربية. مناسب للبحث السريع.</p>
+  <button id="directToggle" aria-pressed="false" style="width:100%;margin-top:12px">▶ تشغيل الكتابة المباشرة</button>
+  <div id="directPanel" class="livebox hide">
+    <div class="liveflag"><i></i>الكتابة المباشرة مفعّلة</div>
+    <input id="liveInput" type="text" autocomplete="off" autocorrect="off" spellcheck="false" autocapitalize="off" placeholder="اضغط هنا واكتب مباشرة على التلفزيون…">
+    <div class="editkeys" dir="ltr">
+      <button id="liveLeft">←</button>
+      <button id="liveRight">→</button>
+      <button id="liveEnter">↵ Enter</button>
+      <button id="liveBackspace">⌫ حذف</button>
+    </div>
+  </div>
+  <p class="note">لا يحتاج تفعيل كيبورد إضافي على التلفزيون؛ يتم فتح إدخال التلفزيون المدمج مؤقتًا ثم إغلاقه تلقائيًا، و ALRADHY-KB يبقى كما هو.</p>
+ </div>
+</section>
+
+<!-- ============ CLIPBOARD ============ -->
+<section class="view" id="view-clip" role="tabpanel">
+ <div class="card">
+  <h2>📥 النص المستلم على الجسر</h2>
+  <p class="sub">آخر نص وصل إلى الجهاز المضيف من أي جهاز مقترن.</p>
+  <textarea id="received" readonly placeholder="لم يصل نص بعد"></textarea>
+  <div class="row" style="margin-top:9px">
+    <button id="copyReceived">⧉ نسخ لهذا الجهاز</button>
+    <button id="receivedToTv">📺 إرسال للتلفزيون</button>
+    <button id="refreshClipboard">⟳ تحديث</button>
+  </div>
+ </div>
+ <div class="card">
+  <h2>📤 مشاركة نص جديد</h2>
+  <p class="sub">يُنسخ النص إلى حافظة الجهاز المضيف (الجوال/التابلت/التلفزيون).</p>
+  <textarea id="clipboardText" placeholder="اكتب أو الصق النص أو الرابط هنا…"></textarea>
+  <div class="row" style="margin-top:9px">
+    <button id="browserPaste">📋 لصق من الحافظة</button>
+    <button class="primary" id="sendClipboard">إرسال للجسر</button>
+  </div>
+  <div class="feedback" id="clipboardMsg"></div>
+  <p class="note">Safari وبعض المتصفحات تمنع الحافظة على HTTP؛ يمكنك دائمًا اللصق يدويًا في المربع.</p>
+ </div>
+</section>
+
+<!-- ============ MORE / SETTINGS ============ -->
+<section class="view" id="view-more" role="tabpanel">
+ <div class="card hide" id="nativeWifiCard">
+  <h2>📡 ريموت Android TV عبر Wi-Fi</h2>
+  <p class="sub">اقتران مباشر مع خدمة الريموت المدمجة في التلفزيون — بدون Root وبدون تركيب كيبورد جديد.</p>
+  <div class="okbox hide" id="browserRelayHelp" style="margin-top:12px">✓ المتصفح يستخدم اتصال Wi-Fi Remote المحفوظ في الجهاز المضيف. لا تحتاج إعادة اقتران التلفزيون.</div>
+  <div id="nativeAdvancedControls">
+   <div class="steps">
+    <div class="step"><div class="n">1</div><div class="body">
+      <b>اختر التلفزيون</b>
+      <div class="row" style="margin-top:8px"><button id="nativeScan">🔍 اكتشاف تلقائي</button></div>
+      <select id="nativeFound" style="margin-top:8px"><option value="">الأجهزة المكتشفة…</option></select>
+      <input id="nativeTvIp" type="text" inputmode="decimal" placeholder="أو اكتب IP يدويًا: 192.168.1.20" class="ltr" style="margin-top:8px;text-align:left">
+      <button class="primary" id="nativePairStart" style="width:100%;margin-top:8px">بدء الاقتران</button>
+    </div></div>
+    <div class="step"><div class="n">2</div><div class="body">
+      <b>أدخل الرمز الظاهر على التلفزيون</b>
+      <input id="nativePairCode" type="text" inputmode="text" maxlength="6" placeholder="A1B2C3" class="code" style="margin-top:8px;font-size:22px;letter-spacing:8px">
+      <button id="nativePairFinish" style="width:100%;margin-top:8px">تأكيد الرمز</button>
+    </div></div>
+    <div class="step"><div class="n">3</div><div class="body">
+      <b>الاتصال</b>
+      <div class="row" style="margin-top:8px"><button class="primary" id="nativeConnect">🔗 اتصال</button><button id="nativeDisconnect" class="danger">فصل</button></div>
+    </div></div>
+   </div>
+  </div>
+  <button id="nativeArabicTest" style="width:100%;margin-top:12px">🧪 اختبار سلامة العربية</button>
+  <div class="feedback" id="nativeMsg"></div>
+  <p id="nativeState" class="note">غير متصل</p>
+ </div>
+
+ <div class="card">
+  <h2>🌐 الدخول من أجهزة أخرى</h2>
+  <p class="sub">افتح هذا العنوان من متصفح الكمبيوتر أو الآيفون أو التاب على نفس شبكة Wi-Fi. أول مرة فقط وافق من شاشة الجهاز المضيف، ويبقى الإذن 30 يومًا.</p>
+  <div class="urlbox"><code id="nativeGatewayUrl">—</code><button id="copyUrl">⧉ نسخ</button><button id="shareUrl" class="hide">↗ مشاركة</button></div>
+  <div class="stats">
+    <div class="stat"><b id="deviceCount">0</b><span>جلسات فعّالة</span></div>
+    <div class="stat"><b id="nativeWifiStat" style="font-size:15px">—</b><span>📡 Wi-Fi Remote</span></div>
+    <div class="stat"><b id="rootState">—</b><span>Root Remote</span></div>
+    <div class="stat"><b id="accessState">—</b><span>Accessibility</span></div>
+  </div>
+  <p id="nativeWifiTvIp" class="note">فحص الاتصال…</p>
+  <h3>الأجهزة المقترنة</h3>
+  <div id="deviceList"></div>
+ </div>
+
+ <div class="card">
+  <h2>🎛 تخصيص</h2>
+  <div class="toggle"><div><span>المظهر</span></div>
+    <div class="seg" id="themeSeg"><button data-theme="dark">داكن</button><button data-theme="light">فاتح</button><button data-theme="auto">تلقائي</button></div></div>
+  <div class="toggle"><div><span>حجم الريموت</span><small>مثل وضع الريموت المصغّر في تطبيق الجوال</small></div>
+    <input type="range" id="remoteSize" min="80" max="125" step="5" value="100" style="width:150px;padding:0;accent-color:var(--pri)"></div>
+  <div class="toggle"><div><span>الاهتزاز عند الضغط</span><small>للجوال والتابلت</small></div><button class="switch" role="switch" data-setting="haptics" aria-label="haptics"></button></div>
+  <div class="toggle"><div><span>التكرار عند الاستمرار بالضغط</span><small>للأسهم والصوت والتقديم</small></div><button class="switch" role="switch" data-setting="repeat" aria-label="repeat"></button></div>
+  <div class="toggle"><div><span>اختصارات كيبورد الكمبيوتر</span><small>تحكم بالتلفزيون من لوحة مفاتيح الكمبيوتر</small></div><button class="switch" role="switch" data-setting="shortcuts" aria-label="shortcuts"></button></div>
+  <div class="toggle"><div><span>حفظ سجل النصوص المرسلة</span><small>محليًا في هذا المتصفح فقط</small></div><button class="switch" role="switch" data-setting="history" aria-label="history"></button></div>
+  <div class="toggle"><div><span>تأكيد زر التشغيل/الإطفاء</span><small>ضغطتان لتجنّب الإطفاء بالخطأ</small></div><button class="switch" role="switch" data-setting="powerConfirm" aria-label="power confirm"></button></div>
+ </div>
+
+ <div class="card" id="shortcutsCard">
+  <h2>⌨️ اختصارات الكمبيوتر</h2>
+  <div class="shortcuts">
+    <span><kbd>↑</kbd> <kbd>↓</kbd> <kbd>←</kbd> <kbd>→</kbd></span><span>التنقل</span>
+    <span><kbd>Enter</kbd></span><span>OK</span>
+    <span><kbd>Esc</kbd> <kbd>Backspace</kbd></span><span>رجوع</span>
+    <span><kbd>H</kbd></span><span>الرئيسية</span>
+    <span><kbd>Space</kbd></span><span>تشغيل / إيقاف مؤقت</span>
+    <span><kbd>+</kbd> <kbd>−</kbd> <kbd>M</kbd></span><span>رفع / خفض / كتم الصوت</span>
+    <span><kbd>PgUp</kbd> <kbd>PgDn</kbd></span><span>القناة</span>
+    <span><kbd>S</kbd></span><span>بحث</span>
+    <span><kbd>0</kbd>…<kbd>9</kbd></span><span>الأرقام</span>
+    <span><kbd>/</kbd></span><span>فتح الكتابة</span>
+  </div>
+ </div>
+
+ <div class="card">
+  <h2>🔒 الأمان والجلسة</h2>
+  <div class="warnbox" style="margin:10px 0">نسخة تطوير: الاتصال المحلي HTTP غير مشفّر. استخدم شبكة منزلية موثوقة فقط، ولا ترسل كلمات مرور أو نصوصًا سرية.</div>
+  <p class="note">الاقتران: رمز PIN + موافقة المضيف · لا سحابة · النصوص تبقى على شبكتك المحلية.</p>
+  <button class="danger" id="disconnect" style="width:100%;margin-top:10px">فصل جلستي الحالية</button>
+ </div>
+ <footer class="foot">ALRADHY Universal Bridge · v0.3.1 · Android · Android TV · Browser</footer>
+</section>
+</div>
+<div class="hide"><span id="wifiQuickMessage"></span><span id="nativeWifiStatOpen"></span><span id="keyboardQuickAccess"></span></div>
+</main>
+
+<div class="toasts" id="toasts" aria-live="polite"></div>
+
+<div class="auth" id="authScreen"><div class="authpanel">
+  <div class="logo">A</div>
+  <h2>اقتران آمن محليًا</h2>
+  <p>افتح تطبيق ALRADHY Bridge على الجهاز المضيف، وأدخل رمز الاقتران الظاهر على شاشته، ثم وافق من نفس الشاشة.</p>
+  <label for="clientName">اسم هذا الجهاز</label>
+  <input id="clientName" maxlength="45" placeholder="iPhone / Windows PC / Galaxy Tab">
+  <label for="pairPin">رمز من 6 أرقام</label>
+  <input class="code" id="pairPin" type="text" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="••••••">
+  <button id="startPair" class="primary" style="width:100%;margin-top:14px">طلب الاقتران</button>
+  <div class="feedback" id="pairMsg"></div>
+  <p class="note">بعد الموافقة يتذكر هذا المتصفح الإذن 30 يومًا. الاتصال غير مشفّر بعد؛ لا تستخدمه على شبكة عامة.</p>
+</div></div>
 
 <script>
 "use strict";
 const $=id=>document.getElementById(id), tokenKey='alradhy.bridge.token.'+location.host;
 function savedBrowserToken(){
   try{return sessionStorage.getItem(tokenKey)||localStorage.getItem(tokenKey)||''}
-  catch(e){return sessionStorage.getItem(tokenKey)||''}
+  catch(e){try{return sessionStorage.getItem(tokenKey)||''}catch(_){return ''}}
 }
 function storeBrowserToken(t){
-  sessionStorage.setItem(tokenKey,t);
+  try{sessionStorage.setItem(tokenKey,t)}catch(e){}
   try{localStorage.setItem(tokenKey,t)}catch(e){}
 }
 function clearBrowserToken(){
-  sessionStorage.removeItem(tokenKey);
+  try{sessionStorage.removeItem(tokenKey)}catch(e){}
   try{localStorage.removeItem(tokenKey)}catch(e){}
 }
-let token=savedBrowserToken(),currentRevision=-1,pairingPoll=null,nativeMode=false,tvHubMode=false;
+
+/* ---------- Settings ---------- */
+const settingsKey='alradhy.bridge.settings';
+const defaults={theme:'dark',size:100,haptics:true,repeat:true,shortcuts:true,history:true,powerConfirm:true,sens:5};
+let settings=Object.assign({},defaults);
+try{Object.assign(settings,JSON.parse(localStorage.getItem(settingsKey)||'{}'))}catch(e){}
+function saveSettings(){try{localStorage.setItem(settingsKey,JSON.stringify(settings))}catch(e){}}
+function applyTheme(){
+  let t=settings.theme;
+  if(t==='auto')t=matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';
+  document.documentElement.dataset.theme=t;
+  document.querySelector('meta[name=theme-color]').content=t==='light'?'#eef2f8':'#070a12';
+  document.querySelectorAll('#themeSeg button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.theme===settings.theme)));
+}
+function applySettings(){
+  applyTheme();
+  document.documentElement.style.setProperty('--rs',String(settings.size/100));
+  $('remoteSize').value=settings.size;
+  $('padSens').value=settings.sens;$('padSensVal').textContent=settings.sens;
+  document.querySelectorAll('.switch[data-setting]').forEach(s=>s.setAttribute('aria-checked',String(!!settings[s.dataset.setting])));
+  renderHistory();
+}
+document.querySelectorAll('#themeSeg button').forEach(b=>b.addEventListener('click',()=>{settings.theme=b.dataset.theme;saveSettings();applyTheme()}));
+{const mq=matchMedia('(prefers-color-scheme: light)');if(mq.addEventListener)mq.addEventListener('change',applyTheme);}
+$('remoteSize').addEventListener('input',e=>{settings.size=+e.target.value;document.documentElement.style.setProperty('--rs',String(settings.size/100));saveSettings()});
+$('padSens').addEventListener('input',e=>{settings.sens=+e.target.value;$('padSensVal').textContent=settings.sens;saveSettings()});
+document.querySelectorAll('.switch[data-setting]').forEach(s=>s.addEventListener('click',()=>{
+  const k=s.dataset.setting;settings[k]=!settings[k];saveSettings();applySettings();
+  if(k==='history'&&!settings.history)clearHistory();
+}));
+
+/* ---------- Feedback ---------- */
+function toast(text,kind=''){
+  const t=document.createElement('div');t.className='toast '+kind;t.textContent=text;
+  const box=$('toasts');box.appendChild(t);
+  while(box.children.length>3)box.firstChild.remove();
+  setTimeout(()=>t.remove(),kind==='bad'?5200:2800);
+}
+function say(id,text,good=true){
+  const el=$(id);if(el){el.textContent=text;el.style.color=good?'var(--ok)':'#ff9ba4'}
+  const visible=el && el.offsetParent!==null;
+  if(!visible||!good)toast(text,good?'good':'bad');
+}
+function buzz(ms=12){if(settings.haptics&&navigator.vibrate)try{navigator.vibrate(ms)}catch(e){}}
+function flash(btn,good){if(!btn)return;const c=good?'okflash':'badflash';btn.classList.add(c);setTimeout(()=>btn.classList.remove(c),good?160:700)}
+
+/* ---------- Networking ---------- */
+let token=savedBrowserToken(),currentRevision=-1,pairingPoll=null,nativeMode=false,tvHubMode=false,platform='';
 const browserRelay=()=>nativeMode && location.hostname!=='127.0.0.1' && location.hostname!=='localhost';
 const remoteApi=(name)=>browserRelay()?'/api/remote/'+name:'/api/native/'+name;
-function say(id,text,good=true){$(id).textContent=text;$(id).style.color=good?'#20c997':'#ff9ba4'}
 async function request(path,method='GET',data=null,auth=true){
   const headers={'Accept':'application/json'};
   if(data!==null)headers['Content-Type']='application/json; charset=UTF-8';
   if(auth && token)headers['Authorization']='Bearer '+token;
-  const r=await fetch(path,{method,headers,body:data===null?undefined:JSON.stringify(data),cache:'no-store'});
+  let r;
+  try{r=await fetch(path,{method,headers,body:data===null?undefined:JSON.stringify(data),cache:'no-store'})}
+  catch(e){setBridge(false);throw Error('تعذر الوصول إلى الجسر — تأكد من نفس شبكة Wi-Fi')}
   let j;try{j=await r.json()}catch(e){throw Error('الاستجابة غير صالحة من الجسر')}
-  if(!r.ok||!j.ok){if(r.status===401){token='';clearBrowserToken();$('authScreen').classList.remove('hide')}throw Error(j.error||('HTTP '+r.status))}
+  setBridge(true);
+  if(!r.ok||!j.ok){if(r.status===401){token='';clearBrowserToken();showAuth()}throw Error(j.error||('HTTP '+r.status))}
   return j;
 }
-async function initialStatus(){
-  try {const s=await request('/api/status','GET',null,false);nativeMode=!!s.nativeEnabled; tvHubMode=!!s.tvHubMode; if(nativeMode){
-    $('nativeWifiCard').classList.remove('hide');
-    $('nativeGatewayUrl').textContent=s.gatewayUrl||'راجع عنوان التابلت في تطبيق Bridge';
-    if(browserRelay()) {
-      $('nativeAdvancedControls').classList.add('hide');
-      $('browserRelayHelp').classList.remove('hide');
-      $('browserRelayHelp').textContent=tvHubMode?
-      '✓ اتصال مباشر من المتصفح إلى TV Hub على التلفزيون. لا تحتاج التابلت.':
-      '✓ المتصفح يستخدم اتصال Wi-Fi Remote الموجود في تطبيق التابلت.';
-    }
-  }else{$('tvBrowserWarning').classList.remove('hide');}$('bridgeStatus').textContent='● '+s.platform+' · Online';$('accessState').textContent=s.accessibility?'ON':'OFF';$('rootState').textContent=s.root?'ON':'OFF';if(token){$('authScreen').classList.add('hide');await refresh()}}
-  catch(e){$('bridgeStatus').textContent='○ Connection Error';say('pairMsg',e.message,false)}
+function setBridge(online){
+  $('bridgePill').className='pill '+(online?'on':'off');
+  $('bridgeStatus').textContent=online?(platform||'Bridge')+' · متصل':'الجسر غير متاح';
 }
+function setTv(state,text){
+  $('tvPill').className='pill '+state;
+  $('tvPillText').textContent='📺 '+text;
+}
+function showAuth(){
+  $('authScreen').classList.remove('hide');
+  if(!$('clientName').value)$('clientName').value=guessDeviceName();
+  setTimeout(()=>$('pairPin').focus(),50);
+}
+function guessDeviceName(){
+  const u=navigator.userAgent;
+  if(/iPad/.test(u))return 'iPad';if(/iPhone/.test(u))return 'iPhone';
+  if(/Android/.test(u))return /Mobile/.test(u)?'Android Phone':'Android Tablet';
+  if(/Windows/.test(u))return 'Windows PC';if(/Mac OS X/.test(u))return 'Mac';if(/Linux/.test(u))return 'Linux PC';
+  return 'Browser';
+}
+
+async function initialStatus(){
+  try {
+    const s=await request('/api/status','GET',null,false);
+    nativeMode=!!s.nativeEnabled; tvHubMode=!!s.tvHubMode; platform=s.platform||'';
+    setBridge(true);
+    $('nativeGatewayUrl').textContent=s.gatewayUrl||location.origin;
+    if(navigator.share)$('shareUrl').classList.remove('hide');
+    if(nativeMode){
+      $('nativeWifiCard').classList.remove('hide');
+      if(tvHubMode)$('nativeArabicTest').classList.add('hide');
+      if(browserRelay()){
+        $('nativeAdvancedControls').classList.add('hide');
+        $('nativeArabicTest').classList.add('hide');
+        $('browserRelayHelp').classList.remove('hide');
+        $('browserRelayHelp').textContent=tvHubMode?
+          '✓ اتصال مباشر من المتصفح إلى TV Hub على التلفزيون. لا تحتاج التابلت.':
+          '✓ المتصفح يستخدم اتصال Wi-Fi Remote الموجود في تطبيق الجوال/التابلت. لا تحتاج إعادة اقتران التلفزيون.';
+      }
+    }else{
+      $('tvBrowserWarning').classList.remove('hide');
+    }
+    $('accessState').textContent=s.accessibility?'ON':'OFF';
+    $('rootState').textContent=s.root?'ON':'OFF';
+    if(token){$('authScreen').classList.add('hide');await refresh()}else showAuth();
+  }catch(e){setBridge(false);say('pairMsg',e.message,false);showAuth()}
+}
+
 async function pair(){
-  const pin=$('pairPin').value.trim(),name=$('clientName').value.trim()||'Browser';
+  const pin=$('pairPin').value.replace(/\D/g,''),name=$('clientName').value.trim()||guessDeviceName();
   if(!/^\d{6}$/.test(pin)){say('pairMsg','أدخل 6 أرقام',false);return}
   $('startPair').disabled=true;
+  $('startPair').innerHTML='<span class="spinner"></span>بانتظار موافقة المضيف…';
+  const reset=()=>{$('startPair').disabled=false;$('startPair').textContent='طلب الاقتران'};
   try{
     const p=await request('/api/pair/request','POST',{pin,name},false);
-    say('pairMsg','تم إرسال الطلب. وافق الآن من شاشة المضيف.');
+    say('pairMsg','تم إرسال الطلب. وافق الآن من شاشة الجهاز المضيف.');
     const started=Date.now();
     if(pairingPoll)clearInterval(pairingPoll);
     pairingPoll=setInterval(async()=>{
       try{
-        if(Date.now()-started>120000){clearInterval(pairingPoll);say('pairMsg','انتهت مهلة الاقتران',false);$('startPair').disabled=false;return}
+        if(Date.now()-started>120000){clearInterval(pairingPoll);say('pairMsg','انتهت مهلة الاقتران',false);reset();return}
         const state=await request('/api/pair/status?id='+encodeURIComponent(p.requestId),'GET',null,false);
         if(state.status==='approved' && state.token){
           clearInterval(pairingPoll);pairingPoll=null;token=state.token;
-          storeBrowserToken(token);$('authScreen').classList.add('hide');$('startPair').disabled=false;await refresh();
-        } else if(state.status==='rejected'){clearInterval(pairingPoll);say('pairMsg','تم رفض الطلب من المضيف',false);$('startPair').disabled=false}
-      }catch(e){clearInterval(pairingPoll);say('pairMsg',e.message,false);$('startPair').disabled=false}
+          storeBrowserToken(token);$('authScreen').classList.add('hide');reset();
+          toast('✓ تم الاقتران بنجاح','good');await refresh();
+        } else if(state.status==='rejected'){clearInterval(pairingPoll);say('pairMsg','تم رفض الطلب من المضيف',false);reset()}
+      }catch(e){clearInterval(pairingPoll);say('pairMsg',e.message,false);reset()}
     },1500);
-  }catch(e){say('pairMsg',e.message,false);$('startPair').disabled=false}
+  }catch(e){say('pairMsg',e.message,false);reset()}
 }
+
 async function refresh(){
-  if(!token)return;
+  if(!token||document.hidden)return;
   try {
     const s=await request('/api/state');
     $('deviceCount').textContent=s.devices.length;
@@ -158,135 +658,318 @@ async function refresh(){
     if(nativeMode)await refreshNativeStatus();
     else {
       $('nativeWifiStat').textContent='غير متاح';
-      $('nativeWifiTvIp').textContent='افتح عنوان Bridge على التابلت';
-      $('remoteState').textContent=s.root?'● Root Remote':'○ Wi-Fi Remote من التابلت فقط';
+      $('nativeWifiTvIp').textContent='افتح عنوان Bridge على الجوال/التابلت أو TV Hub';
+      $('remoteState').textContent=s.root?'● Root Remote':'○ Wi-Fi Remote من الجوال/التابلت فقط';
+      setTv(s.root?'on':'mid',s.root?'Root':'محدود');
     }
-    $('deviceList').replaceChildren();
-    s.devices.forEach(d=>{const el=document.createElement('div');el.className='logline';const title=document.createElement('strong');title.textContent=d.client;el.append(title,document.createTextNode(' paired session'));$('deviceList').appendChild(el)});
-    if(s.revision!==currentRevision){currentRevision=s.revision;$('received').value=s.clipboard||''}
-  }catch(e){say('remoteMsg',e.message,false)}
-}
-async function keySend(key){
-  say('remoteMsg','جارٍ إرسال '+key+' ...');
-  try {const r=await request(nativeMode?remoteApi('key'):'/api/key','POST',{key});say('remoteMsg',r.result||'تم إرسال الأمر')}
-  catch(e){say('remoteMsg','لم ينفذ الأمر: '+e.message+(nativeMode?' — تأكد من الاتصال ثم جرّب مجددًا.':' — افتح صفحة Bridge المستضافة على التابلت.'),false)}
-}
-async function clipboardSend(target,text,path){
-  if(!text.trim()){say(target,'اكتب نصًا أولاً',false);return}
-  try{
-    const r=await request(nativeMode && path==='/api/text'?remoteApi('text'):path,'POST',{text});
-    if(path==='/api/text') {
-      const message = r.delivery==='native_sent' ? 'أُرسل النص عبر Android TV Remote v2 — تحقق من ظهوره داخل الخانة المفتوحة على التلفزيون' : r.delivery==='ime' ? '✓ وصل النص للحقل النشط عبر Android IME (يدعم العربية والإنجليزية)' : r.delivery==='paste_key_sent'
-        ? '✓ تم إرسال أمر لصق النص إلى الحقل النشط على التلفزيون. إذا لم يظهر النص، اضغط على الحقل في التلفزيون وجرّب مجددًا.'
-        : r.delivery==='clipboard_only'
-          ? 'تم حفظ النص العربي/الإنجليزي في الحافظة فقط. فعّل Root Remote على التلفزيون، وافتح الحقل المطلوب ثم أعد الإرسال.'
-          : r.delivery==='ime'
-            ? 'تمت كتابة النص داخل الحقل.'
-            : 'تعذر توصيل النص.';
-      say(target,message,r.delivery!=='failed');
+    const list=$('deviceList');list.replaceChildren();
+    s.devices.forEach(d=>{
+      const el=document.createElement('div');el.className='devitem';
+      const icon=/iphone|android phone|phone/i.test(d.client)?'📱':/ipad|tab/i.test(d.client)?'📲':/local ui/i.test(d.client)?'🏠':'💻';
+      el.append(document.createTextNode(icon+'  '+d.client));
+      const when=document.createElement('small');
+      const mins=Math.max(0,Math.round((Date.now()-(d.lastUsed||Date.now()))/60000));
+      when.textContent=mins<1?'الآن':'قبل '+mins+' د';
+      el.append(when);list.appendChild(el);
+    });
+    if(!s.devices.length)list.textContent='لا توجد جلسات';
+    if(s.revision!==currentRevision){
+      if(currentRevision!==-1 && s.clipboard && !$('view-clip').classList.contains('active')){$('clipBadge').classList.remove('hide');toast('📋 وصل نص جديد إلى الحافظة','good')}
+      currentRevision=s.revision;$('received').value=s.clipboard||'';
     }
-    else{say(target,r.deliveredToClipboard?'تم نقل النص إلى حافظة الجهاز المضيف':'تم حفظ النص في الجسر، لكن لم تنجح الكتابة للحافظة',r.deliveredToClipboard);await refresh()}
-  }catch(e){say(target,e.message,false)}
+  }catch(e){/* status pill already reflects connectivity */}
 }
-async function nativeAction(endpoint,payload={}){
-  try{
-    const r=await request(endpoint,'POST',payload);
-    say('nativeMsg',r.message||r.result||'تمت العملية');
-    await refreshNativeStatus();
-    return r;
-  }catch(e){say('nativeMsg',e.message,false);return null;}
-}
+
 async function refreshNativeStatus(){
   if(!nativeMode||!token)return;
   try{
     const r=await request(remoteApi('status'));
     const s=r.native;
+    const rootHub=tvHubMode && s.mode==='root_opt_in';
+    const label=rootHub?'Root ON':s.connected?'متصل ✓':s.paired?'مقترن':'غير متصل';
     $('nativeState').textContent='TV: '+(s.host||'—')+' · '+(s.connected?'● متصل':s.paired?'مقترن':'غير مقترن')
       +(s.nativeImeActive?' · إدخال نص مؤقت':'')+' · '+(s.phase||'idle');
-    $('nativeWifiStat').textContent=tvHubMode && s.mode==='root_opt_in'?'Root ON':s.connected?'متصل ✓':s.paired?'مقترن':'غير متصل';
-    $('nativeWifiStat').style.color=s.connected?'#20c997':'#ffbf69';
-    $('nativeWifiTvIp').textContent=s.host?(tvHubMode?'TV Hub · ':'TV · ')+s.host:'لم يتم تحديد التلفزيون';
+    $('nativeWifiStat').textContent=label;
+    $('nativeWifiStat').style.color=s.connected?'var(--ok)':'var(--warn)';
+    $('nativeWifiTvIp').textContent=s.host?(tvHubMode?'TV Hub · ':'TV · ')+s.host:'لم يتم تحديد التلفزيون بعد — افتح الإعدادات ← ريموت Wi-Fi';
+    $('tvName').textContent=tvHubMode?'TV Hub · '+(s.host||''):(s.host?'Android TV · '+s.host:'لم يتم اختيار تلفزيون');
     if(s.host&&!$('nativeTvIp').value)$('nativeTvIp').value=s.host;
     const list=$('nativeFound'), selected=list.value;
-    list.replaceChildren(new Option('اختر جهازًا مكتشفًا...', ''));
-    (r.devices||[]).forEach(d=>list.add(new Option(d.name+' — '+d.ip,d.ip)));
+    list.replaceChildren(new Option((r.devices||[]).length?'اختر جهازًا مكتشفًا…':'لم يُكتشف جهاز بعد',''));
+    (r.devices||[]).forEach(d=>list.add(new Option('📺 '+d.name+' — '+d.ip,d.ip)));
     if(selected)list.value=selected;
-    $('remoteState').textContent=s.connected?'● Wi-Fi Remote متصل':'○ Wi-Fi Remote غير متصل';
-    if(s.lastError && !s.connected && !s.nativeImeActive)say('nativeMsg','تفاصيل الاتصال: '+s.lastError,false);
-  }catch(e){say('nativeMsg',e.message,false)}
+    $('remoteState').textContent=s.connected?'● متصل عبر Wi-Fi':s.paired?'○ مقترن — يتصل تلقائيًا عند أول ضغطة':'○ غير مقترن — اضغط «الاتصال»';
+    setTv(s.connected?'on':s.paired?'mid':'off',label);
+    if(s.lastError && !s.connected && !s.nativeImeActive)$('nativeMsg').textContent='تفاصيل الاتصال: '+s.lastError;
+  }catch(e){setTv('off','خطأ')}
+}
+
+/* ---------- Remote keys ---------- */
+const keyLabels={POWER:'تشغيل/إطفاء',HOME:'الرئيسية',BACK:'رجوع',OK:'OK',UP:'أعلى',DOWN:'أسفل',LEFT:'يسار',RIGHT:'يمين',MENU:'القائمة',SEARCH:'بحث',VOL_UP:'صوت +',VOL_DOWN:'صوت −',MUTE:'كتم',PLAY_PAUSE:'تشغيل/إيقاف'};
+let keyChain=Promise.resolve(),inflight=0;
+function keySend(key,btn){
+  if(inflight>4)return Promise.resolve();      // drop excess repeats instead of lagging behind
+  inflight++;buzz();
+  keyChain=keyChain.then(async()=>{
+    const t0=performance.now();
+    try{
+      const r=await request(nativeMode?remoteApi('key'):'/api/key','POST',{key});
+      const ms=Math.round(performance.now()-t0);
+      $('latency').textContent=ms+'ms';
+      flash(btn,true);
+      $('remoteMsg').style.color='var(--muted)';
+      $('remoteMsg').textContent='✓ '+(keyLabels[key]||key)+' · '+ms+'ms';
+      return r;
+    }catch(e){
+      flash(btn,false);buzz(60);
+      say('remoteMsg','لم يُنفَّذ '+(keyLabels[key]||key)+': '+e.message+(nativeMode?' — تحقق من الاتصال في الإعدادات.':' — افتح Bridge على الجوال/التابلت.'),false);
+    }finally{inflight--}
+  });
+  return keyChain;
+}
+// Pointer-based keys. Mouse/pen: send on press. Touch: send on release so that
+// scrolling the page over a button never fires a key (the browser cancels the pointer).
+// Holding a repeatable key starts auto-repeat for both.
+function bindKey(btn){
+  const key=btn.dataset.key, repeatable=btn.hasAttribute('data-repeat');
+  let holdT=null,repT=null,pending=false,repeated=false;
+  const clear=()=>{clearTimeout(holdT);clearInterval(repT);holdT=repT=null;btn.classList.remove('pressed')};
+  btn.addEventListener('pointerdown',e=>{
+    if(e.button>0)return;
+    const touch=e.pointerType==='touch';
+    if(!touch)e.preventDefault();
+    btn.classList.add('pressed');repeated=false;pending=touch;
+    if(!touch)keySend(key,btn);
+    if(repeatable&&settings.repeat)holdT=setTimeout(()=>{
+      if(pending){pending=false;keySend(key,btn)}
+      repeated=true;repT=setInterval(()=>keySend(key,btn),150);
+    },touch?360:420);
+  });
+  btn.addEventListener('pointerup',()=>{if(pending&&!repeated)keySend(key,btn);pending=false;clear()});
+  ['pointerleave','pointercancel','blur'].forEach(ev=>btn.addEventListener(ev,()=>{pending=false;clear()}));
+  btn.addEventListener('contextmenu',e=>e.preventDefault());
+  btn.addEventListener('click',e=>{if(e.detail===0)keySend(key,btn)}); // keyboard / TV D-pad activation
+}
+document.querySelectorAll('[data-key]').forEach(bindKey);
+
+let powerArmed=null;
+$('powerKey').addEventListener('click',()=>{
+  const b=$('powerKey');
+  if(!settings.powerConfirm||powerArmed){clearTimeout(powerArmed);powerArmed=null;b.classList.remove('arm');keySend('POWER',b);return}
+  b.classList.add('arm');buzz(25);toast('اضغط زر التشغيل مرة أخرى للتأكيد');
+  powerArmed=setTimeout(()=>{powerArmed=null;b.classList.remove('arm')},2500);
+});
+
+/* ---------- PC keyboard shortcuts ---------- */
+const codeMap={ArrowUp:'UP',ArrowDown:'DOWN',ArrowLeft:'LEFT',ArrowRight:'RIGHT',Enter:'OK',NumpadEnter:'OK',Escape:'BACK',Backspace:'BACK',
+  KeyH:'HOME',KeyM:'MUTE',Space:'PLAY_PAUSE',KeyS:'SEARCH',Equal:'VOL_UP',NumpadAdd:'VOL_UP',Minus:'VOL_DOWN',NumpadSubtract:'VOL_DOWN',
+  PageUp:'CH_UP',PageDown:'CH_DOWN',MediaPlayPause:'PLAY_PAUSE',AudioVolumeUp:'VOL_UP',AudioVolumeDown:'VOL_DOWN',AudioVolumeMute:'MUTE'};
+let lastShortcut=0;
+document.addEventListener('keydown',e=>{
+  if(!settings.shortcuts||!token||!$('authScreen').classList.contains('hide'))return;
+  const t=e.target, tag=(t.tagName||'').toLowerCase();
+  if(tag==='input'||tag==='textarea'||tag==='select'||t.isContentEditable)return;
+  if(e.ctrlKey||e.metaKey||e.altKey)return;
+  if(e.code==='Slash'){e.preventDefault();showView('keyboard');$('remoteText').focus();return}
+  let key=codeMap[e.code];
+  const m=/^(?:Digit|Numpad)(\d)$/.exec(e.code);if(m)key='DIGIT_'+m[1];
+  if(!key)return;
+  if((e.code==='Enter'||e.code==='Space')&&tag==='button')return; // let focused buttons activate normally
+  e.preventDefault();
+  const now=Date.now();if(e.repeat&&now-lastShortcut<120)return;lastShortcut=now;
+  keySend(key,document.querySelector('#view-remote [data-key="'+key+'"]'));
+});
+
+/* ---------- Touchpad ---------- */
+(()=>{
+  const pad=$('touchpad'),dot=$('padDot'),fl=$('dirFlash');
+  const pointers=new Map();let st=null,longT=null,flT=null,wheelAcc=0;
+  const arrows={UP:'▲',DOWN:'▼',LEFT:'◀',RIGHT:'▶',OK:'●',BACK:'↩',HOME:'⌂'};
+  const show=k=>{fl.textContent=arrows[k]||'';fl.classList.add('on');clearTimeout(flT);flT=setTimeout(()=>fl.classList.remove('on'),90)};
+  const send=k=>{show(k);keySend(k)};
+  const th=()=>Math.round(70-settings.sens*5.5);   // px per step: 64 (low) … 15 (high)
+  const pos=e=>{const r=pad.getBoundingClientRect();return[e.clientX-r.left,e.clientY-r.top]};
+  pad.addEventListener('pointerdown',e=>{
+    pad.setPointerCapture(e.pointerId);pointers.set(e.pointerId,true);
+    if(pointers.size===1){
+      const [x,y]=pos(e);st={x:e.clientX,y:e.clientY,lx:e.clientX,ly:e.clientY,ax:0,ay:0,moved:false,long:false,multi:false};
+      dot.style.left=x+'px';dot.style.top=y+'px';dot.classList.add('on');
+      longT=setTimeout(()=>{if(st&&!st.moved&&!st.multi){st.long=true;buzz(40);send('BACK')}},650);
+    }else if(st){st.multi=true;clearTimeout(longT)}
+  });
+  pad.addEventListener('pointermove',e=>{
+    if(!st||!pointers.has(e.pointerId)||st.multi)return;
+    const [x,y]=pos(e);dot.style.left=x+'px';dot.style.top=y+'px';
+    st.ax+=e.clientX-st.lx;st.ay+=e.clientY-st.ly;st.lx=e.clientX;st.ly=e.clientY;
+    if(Math.hypot(e.clientX-st.x,e.clientY-st.y)>10){st.moved=true;clearTimeout(longT)}
+    const t=th();
+    if(Math.abs(st.ax)>=t&&Math.abs(st.ax)>=Math.abs(st.ay)){
+      // physical direction, independent of RTL layout
+      send(st.ax>0?'RIGHT':'LEFT');st.ax-=Math.sign(st.ax)*t;st.ay=0;
+    }else if(Math.abs(st.ay)>=t){
+      send(st.ay>0?'DOWN':'UP');st.ay-=Math.sign(st.ay)*t;st.ax=0;
+    }
+  });
+  const end=e=>{
+    if(!pointers.has(e.pointerId))return;
+    pointers.delete(e.pointerId);
+    if(pointers.size)return;
+    clearTimeout(longT);dot.classList.remove('on');
+    if(st&&!st.moved&&!st.long){send(st.multi?'HOME':'OK')}
+    st=null;
+  };
+  pad.addEventListener('pointerup',end);pad.addEventListener('pointercancel',end);
+  pad.addEventListener('contextmenu',e=>e.preventDefault());
+  pad.addEventListener('wheel',e=>{
+    e.preventDefault();wheelAcc+=e.deltaY;
+    if(Math.abs(wheelAcc)>=60){send(wheelAcc>0?'DOWN':'UP');wheelAcc=0}
+  },{passive:false});
+})();
+
+/* ---------- Text sending + history ---------- */
+const histKey='alradhy.bridge.history';
+function loadHistory(){try{return JSON.parse(localStorage.getItem(histKey)||'[]')}catch(e){return[]}}
+function pushHistory(text){
+  if(!settings.history)return;
+  const h=loadHistory().filter(x=>x!==text);h.unshift(text);
+  try{localStorage.setItem(histKey,JSON.stringify(h.slice(0,12)))}catch(e){}
+  renderHistory();
+}
+function clearHistory(){try{localStorage.removeItem(histKey)}catch(e){}renderHistory()}
+function renderHistory(){
+  const h=settings.history?loadHistory():[];
+  $('historyWrap').classList.toggle('hide',!h.length);
+  const box=$('historyChips');box.replaceChildren();
+  h.forEach(t=>{const c=document.createElement('button');c.className='chip';c.textContent=t.replace(/\s+/g,' ').slice(0,60);c.title=t;
+    c.addEventListener('click',()=>{$('remoteText').value=t;updateCount();$('remoteText').focus()});box.appendChild(c)});
+}
+$('clearHistory').addEventListener('click',clearHistory);
+function updateCount(){$('textCount').textContent=$('remoteText').value.length}
+$('remoteText').addEventListener('input',updateCount);
+$('remoteText').addEventListener('keydown',e=>{if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)){e.preventDefault();$('sendText').click()}});
+
+async function clipboardSend(target,text,path){
+  if(!text.trim()){say(target,'اكتب نصًا أولاً',false);return}
+  const btn=path==='/api/text'?$('sendText'):$('sendClipboard');
+  btn.disabled=true;
+  try{
+    const r=await request(nativeMode && path==='/api/text'?remoteApi('text'):path,'POST',{text});
+    if(path==='/api/text') {
+      const message = r.delivery==='native_sent' ? '✓ أُرسل النص عبر Wi-Fi — تحقق من ظهوره في الخانة المفتوحة على التلفزيون'
+        : r.delivery==='ime' ? '✓ وصل النص للحقل النشط عبر Android IME'
+        : r.delivery==='paste_key_sent' ? '✓ أُرسل أمر لصق النص للحقل النشط. إن لم يظهر، افتح الحقل على التلفزيون وأعد المحاولة.'
+        : r.delivery==='clipboard_only' ? 'حُفظ النص في حافظة التلفزيون فقط. فعّل Root Remote أو اتصال Wi-Fi ثم أعد الإرسال.'
+        : 'تعذر توصيل النص.';
+      say(target,message,r.delivery!=='failed');
+      if(r.delivery!=='failed')pushHistory(text);
+    }
+    else{say(target,r.deliveredToClipboard?'✓ تم نقل النص إلى حافظة الجهاز المضيف':'حُفظ النص في الجسر، لكن تعذّرت الكتابة للحافظة',r.deliveredToClipboard);await refresh()}
+  }catch(e){say(target,e.message,false)}
+  finally{btn.disabled=false}
+}
+$('sendText').addEventListener('click',()=>clipboardSend('textMsg',$('remoteText').value,'/api/text'));
+$('sendClipboard').addEventListener('click',()=>clipboardSend('clipboardMsg',$('clipboardText').value,'/api/clipboard'));
+$('receivedToTv').addEventListener('click',()=>clipboardSend('clipboardMsg',$('received').value,'/api/text'));
+$('clearText').addEventListener('click',()=>{$('remoteText').value='';updateCount();$('remoteText').focus()});
+async function readClipboardInto(id,msgId){
+  try{if(!navigator.clipboard||!navigator.clipboard.readText)throw Error('المتصفح يمنع قراءة الحافظة على HTTP');$(id).value=await navigator.clipboard.readText();if(id==='remoteText')updateCount()}
+  catch(e){say(msgId,'ألصق النص يدويًا (اضغط مطوّلًا ← لصق). '+e.message,false);$(id).focus()}
+}
+$('pasteText').addEventListener('click',()=>readClipboardInto('remoteText','textMsg'));
+$('browserPaste').addEventListener('click',()=>readClipboardInto('clipboardText','clipboardMsg'));
+$('focusText').addEventListener('click',()=>{showView('keyboard');$('remoteText').focus()});
+$('refreshClipboard').addEventListener('click',async()=>{await refresh();toast('تم التحديث')});
+$('copyReceived').addEventListener('click',()=>copyText($('received').value,$('received'),'clipboardMsg'));
+async function copyText(text,selectEl,msgId){
+  if(!text)return;
+  try{if(!navigator.clipboard||!window.isSecureContext)throw Error('blocked');await navigator.clipboard.writeText(text);toast('✓ تم النسخ','good')}
+  catch(e){
+    try{
+      const ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();
+      const ok=document.execCommand('copy');ta.remove();if(!ok)throw Error('x');toast('✓ تم النسخ','good');
+    }catch(_){if(selectEl&&selectEl.select){selectEl.focus();selectEl.select()}say(msgId,'المتصفح لا يسمح بالنسخ التلقائي؛ النص محدد، انسخه يدويًا',false)}
+  }
+}
+
+/* ---------- Native Wi-Fi pairing ---------- */
+async function nativeAction(endpoint,payload={},btn=null){
+  if(btn)btn.disabled=true;
+  try{
+    const r=await request(endpoint,'POST',payload);
+    say('nativeMsg',r.message||r.result||'تمت العملية');
+    await refreshNativeStatus();
+    return r;
+  }catch(e){say('nativeMsg',e.message,false);return null}
+  finally{if(btn)btn.disabled=false}
 }
 $('nativeArabicTest').addEventListener('click',async()=>{
   const original='بسم الله الرحمن الرحيم — اختبار العربية ١٢٣';
   try {
     const r=await request('/api/native/echo','POST',{text:original});
     const ok=r.echo===original;
-    say('nativeMsg',ok
-      ? '✓ العربية وصلت إلى Bridge سليمة دون تغيير الترميز. جرّب الآن إرسالها إلى حقل التلفزيون.'
-      : '✗ فشل اختبار الترميز بين التابلت وBridge: البيانات تغيّرت قبل إرسالها للتلفزيون.',ok);
+    say('nativeMsg',ok?'✓ العربية وصلت إلى Bridge سليمة. جرّب الآن إرسالها للتلفزيون.':'✗ فشل اختبار الترميز: البيانات تغيّرت قبل إرسالها للتلفزيون.',ok);
   }catch(e){say('nativeMsg','تعذر اختبار العربية: '+e.message,false)}
 });
-$('nativeWifiStatOpen').addEventListener('click',()=>{
-  if(nativeMode) {
-    $('nativeWifiCard').classList.remove('hide');
-    $('nativeWifiCard').scrollIntoView({behavior:'smooth',block:'start'});
-    say('wifiQuickMessage','تفاصيل الاتصال وأزرار ريموت Wi-Fi متاحة هنا.');
-  }else{
-    $('tvBrowserWarning').classList.remove('hide');
-    $('tvBrowserWarning').scrollIntoView({behavior:'smooth',block:'start'});
-    say('wifiQuickMessage','هذه صفحة التلفزيون؛ افتح Bridge من التابلت أو الجوال بدلًا منها.',false);
-  }
-});
 $('wifiQuickAccess').addEventListener('click',()=>{
-  if(!nativeMode){
-    say('wifiQuickMessage','أنت تفتح جسر التلفزيون. افتح Bridge على التابلت واضغط «فتح ريموت Wi-Fi الآن»، أو استخدم عنوان التابلت على المنفذ 18080.',false);
-    $('tvBrowserWarning').classList.remove('hide');
-    return;
-  }
-  $('nativeWifiCard').classList.remove('hide');
-  $('nativeWifiCard').scrollIntoView({behavior:'smooth',block:'start'});
-  say('wifiQuickMessage',browserRelay()?'الريموت جاهز من المتصفح. اضغط Home أو الأسهم في قسم ريموت التلفزيون.':'ريموت Wi-Fi هنا. إذا كان التلفزيون مقترنًا، اضغط اتصال ثم استخدم الأسهم.');
+  showView('more');
+  const target=nativeMode?$('nativeWifiCard'):$('tvBrowserWarning');
+  target.classList.remove('hide');
+  setTimeout(()=>target.scrollIntoView({behavior:'smooth',block:'start'}),60);
+  if(!nativeMode)toast('هذه صفحة جسر التلفزيون القديم؛ افتح Bridge من الجوال/التابلت أو TV Hub.','bad');
 });
-$('keyboardQuickAccess').addEventListener('click',()=>{
- $('remoteText').scrollIntoView({behavior:'smooth',block:'center'});
- $('remoteText').focus();
+$('nativeScan').addEventListener('click',async()=>{
+  const r=await nativeAction('/api/native/scan',{}, $('nativeScan'));
+  if(r){let n=0;const iv=setInterval(()=>{refreshNativeStatus();if(++n>5)clearInterval(iv)},1500)}
 });
-$('nativeScan').addEventListener('click',()=>nativeAction('/api/native/scan'));
 $('nativeFound').addEventListener('change',()=>{if($('nativeFound').value)$('nativeTvIp').value=$('nativeFound').value});
-$('nativePairStart').addEventListener('click',()=>nativeAction('/api/native/pair/start',{ip:$('nativeTvIp').value.trim()}));
-$('nativePairFinish').addEventListener('click',()=>nativeAction('/api/native/pair/finish',{code:$('nativePairCode').value.trim()}));
-$('nativeConnect').addEventListener('click',()=>nativeAction('/api/native/connect',{ip:$('nativeTvIp').value.trim()}));
-$('nativeDisconnect').addEventListener('click',async()=>{deactivateDirect();await nativeAction('/api/native/disconnect')});
-document.querySelectorAll('[data-key]').forEach(b=>b.addEventListener('click',()=>keySend(b.dataset.key)));
+$('nativePairStart').addEventListener('click',async()=>{
+  const r=await nativeAction('/api/native/pair/start',{ip:$('nativeTvIp').value.trim()},$('nativePairStart'));
+  if(r)$('nativePairCode').focus();
+});
+$('nativePairCode').addEventListener('input',e=>{e.target.value=e.target.value.toUpperCase().replace(/[^0-9A-F]/g,'').slice(0,6)});
+$('nativePairCode').addEventListener('keydown',e=>{if(e.key==='Enter')$('nativePairFinish').click()});
+$('nativePairFinish').addEventListener('click',async()=>{
+  const r=await nativeAction('/api/native/pair/finish',{code:$('nativePairCode').value.trim()},$('nativePairFinish'));
+  if(r)await nativeAction('/api/native/connect',{ip:$('nativeTvIp').value.trim()},$('nativeConnect'));
+});
+$('nativeConnect').addEventListener('click',()=>nativeAction('/api/native/connect',{ip:$('nativeTvIp').value.trim()},$('nativeConnect')));
+$('nativeDisconnect').addEventListener('click',async()=>{deactivateDirect();await nativeAction('/api/native/disconnect',{}, $('nativeDisconnect'))});
+
+$('copyUrl').addEventListener('click',()=>copyText($('nativeGatewayUrl').textContent,null,'nativeMsg'));
+$('shareUrl').addEventListener('click',()=>{navigator.share({title:'ALRADHY Remote',text:'افتح ريموت ALRADHY على نفس شبكة Wi-Fi',url:$('nativeGatewayUrl').textContent}).catch(()=>{})});
+
 $('startPair').addEventListener('click',pair);
+$('pairPin').addEventListener('input',e=>{e.target.value=e.target.value.replace(/\D/g,'').slice(0,6);if(e.target.value.length===6&&!$('startPair').disabled)pair()});
 $('pairPin').addEventListener('keydown',e=>{if(e.key==='Enter')pair()});
-// Direct Live Keyboard. The remote-only input field is cleared after every committed
-// input event. During IME composition, wait for the final compositionend event.
+$('disconnect').addEventListener('click',async()=>{try{await request('/api/disconnect','POST',{})}catch(e){}token='';clearBrowserToken();showAuth()});
+
+/* ---------- Direct live keyboard ----------
+   The remote-only input field is cleared after every committed input event.
+   During IME composition, stream codepoint-safe deltas and wait for compositionend. */
 let directMode=false, composing=false, directQueue=Promise.resolve();
 function deactivateDirect(message='') {
-  directMode=false;
+  const was=directMode;directMode=false;
   $('directPanel').classList.add('hide');
-  $('directToggle').textContent='مباشر · تشغيل';
+  $('directToggle').textContent='▶ تشغيل الكتابة المباشرة';
+  $('directToggle').classList.remove('primary');
   $('directToggle').setAttribute('aria-pressed','false');
-  if(nativeMode && token)directQueue.then(()=>request(remoteApi('direct/end'),'POST',{})).catch(()=>{});
+  if(was && nativeMode && token)directQueue.then(()=>request(remoteApi('direct/end'),'POST',{})).catch(()=>{});
   if(message)say('textMsg',message,false);
 }
 async function toggleDirect(){
   if(directMode){deactivateDirect();say('textMsg','تم إيقاف الكتابة المباشرة');return}
   try {
     const state=await request('/api/state');
-    if(!nativeMode){say('textMsg','استخدم واجهة Bridge المستضافة على التابلت/الجوال للكتابة عبر ريموت Wi-Fi. هذه الواجهة تستضيفها شاشة التلفزيون.',false);return}
-    if(nativeMode && !(await request(remoteApi('status'))).native.paired){
-      say('textMsg','اقترن بالتلفزيون أولاً عبر لوحة Wi-Fi Remote.',false);return;
-    }
-    if(!nativeMode && !state.imeReady){
-      say('textMsg','للكتابة الحية: على التلفزيون اختر ALRADHY Bridge Keyboard من إعدادات لوحة المفاتيح، ثم افتح حقل كتابة واضغط عليه. Root وحده لا يكفي لإدخال العربية.',false);
-      return;
-    }
+    if(!nativeMode){say('textMsg','استخدم Bridge على الجوال/التابلت أو TV Hub للكتابة عبر Wi-Fi.',false);return}
+    const ns=(await request(remoteApi('status'))).native;
+    if(!ns.paired){say('textMsg','اقترن بالتلفزيون أولاً من الإعدادات ← ريموت Wi-Fi.',false);return}
+    if(!nativeMode && !state.imeReady){say('textMsg','فعّل لوحة مفاتيح Bridge على التلفزيون أولاً.',false);return}
     directMode=true;
     $('directPanel').classList.remove('hide');
-    $('directToggle').textContent='مباشر · إيقاف';
+    $('directToggle').textContent='■ إيقاف الكتابة المباشرة';
+    $('directToggle').classList.add('primary');
     $('directToggle').setAttribute('aria-pressed','true');
-    say('textMsg','الكتابة المباشرة جاهزة. اضغط مربع الكتابة المباشرة واكتب بالعربية أو الإنجليزية.');
+    say('textMsg','الكتابة المباشرة جاهزة — اكتب في المربع.');
     $('liveInput').value='';
     $('liveInput').focus();
   } catch(e){say('textMsg',e.message,false)}
@@ -295,9 +978,10 @@ function queueDirect(op,text=''){
   if(!directMode)return;
   directQueue=directQueue.then(async()=>{
      await request(nativeMode?remoteApi('live'):'/api/keyboard','POST',{op,text});
-     say('textMsg','✓ أُرسل '+(op==='type'?'النص':op)+' عبر Wi-Fi. تحقق من ظهوره على التلفزيون.');
+     $('textMsg').style.color='var(--muted)';
+     $('textMsg').textContent='✓ '+(op==='type'?'«'+text+'»':op)+' أُرسل للتلفزيون';
   }).catch(e=>{
-     deactivateDirect('توقف الإدخال المباشر: '+e.message+' — تأكد من اتصال Wi-Fi Remote وأن خانة الإدخال مفتوحة على التلفزيون.');
+     deactivateDirect('توقف الإدخال المباشر: '+e.message+' — تأكد من الاتصال وأن خانة الإدخال مفتوحة على التلفزيون.');
   });
 }
 const live=$('liveInput');
@@ -313,9 +997,7 @@ function streamComposition(text){
   composingMirror=text;
 }
 live.addEventListener('compositionstart',()=>{composing=true;composingMirror='';finalComposition=''});
-live.addEventListener('compositionupdate',()=>{
-  requestAnimationFrame(()=>{if(composing)streamComposition(live.value)});
-});
+live.addEventListener('compositionupdate',()=>{requestAnimationFrame(()=>{if(composing)streamComposition(live.value)})});
 live.addEventListener('compositionend',()=>{
   if(!directMode){composing=false;live.value='';return}
   const completed=live.value;
@@ -324,18 +1006,15 @@ live.addEventListener('compositionend',()=>{
 });
 live.addEventListener('beforeinput',e=>{
   if(!directMode || composing)return;
-  if(e.inputType==='deleteContentBackward'){
-    e.preventDefault();live.value='';queueDirect('backspace');
-  }
-  if(e.inputType==='insertLineBreak'){
-    e.preventDefault();live.value='';queueDirect('enter');
-  }
+  if(e.inputType==='deleteContentBackward'){e.preventDefault();live.value='';queueDirect('backspace')}
+  if(e.inputType==='insertLineBreak'){e.preventDefault();live.value='';queueDirect('enter')}
 });
 live.addEventListener('keydown',e=>{
   if(!directMode)return;
   if(e.key==='Enter'){e.preventDefault();queueDirect('enter')}
   if(e.key==='ArrowLeft'){e.preventDefault();queueDirect('left')}
   if(e.key==='ArrowRight'){e.preventDefault();queueDirect('right')}
+  if(e.key==='Backspace'&&!live.value&&!composing){e.preventDefault();queueDirect('backspace')}
 });
 live.addEventListener('input',e=>{
   if(!directMode)return;
@@ -351,13 +1030,27 @@ $('liveBackspace').addEventListener('click',()=>queueDirect('backspace'));
 $('liveEnter').addEventListener('click',()=>queueDirect('enter'));
 $('liveLeft').addEventListener('click',()=>queueDirect('left'));
 $('liveRight').addEventListener('click',()=>queueDirect('right'));
-$('sendText').addEventListener('click',()=>clipboardSend('textMsg',$('remoteText').value,'/api/text'));
-$('sendClipboard').addEventListener('click',()=>clipboardSend('clipboardMsg',$('clipboardText').value,'/api/clipboard'));
-$('clearText').addEventListener('click',()=>{$('remoteText').value=''});
-$('focusText').addEventListener('click',()=>{$('remoteText').focus();say('remoteMsg','اكتب النص في الحقل أسفل الريموت')});
-$('refreshClipboard').addEventListener('click',refresh);
-$('browserPaste').addEventListener('click',async()=>{try{if(!navigator.clipboard)throw Error('المتصفح يمنع قراءة الحافظة في HTTP');$('clipboardText').value=await navigator.clipboard.readText()}catch(e){say('clipboardMsg','ألصق النص يدويًا في المربع. '+e.message,false);$('clipboardText').focus()}});
-$('copyReceived').addEventListener('click',async()=>{const text=$('received').value;if(!text)return;try{if(!navigator.clipboard)throw Error('blocked');await navigator.clipboard.writeText(text);say('clipboardMsg','تم النسخ لحافظة هذا الجهاز')}catch(e){$('received').focus();$('received').select();say('clipboardMsg','المتصفح لا يسمح بالنسخ التلقائي؛ انسخ النص المحدد يدويًا',false)}});
-$('disconnect').addEventListener('click',async()=>{try{await request('/api/disconnect','POST',{})}catch(e){}token='';clearBrowserToken();$('authScreen').classList.remove('hide')});
+
+/* ---------- Tabs ---------- */
+const wide=matchMedia('(min-width:1024px)');
+let currentView='remote';
+function showView(name){
+  if(wide.matches&&name==='remote')name=currentView==='remote'?'keyboard':currentView;
+  currentView=name;
+  document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id==='view-'+name));
+  document.querySelectorAll('#tabbar [data-tab]').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.tab===name)));
+  if(name==='clip')$('clipBadge').classList.add('hide');
+  if(name!=='keyboard'&&directMode)deactivateDirect();
+  try{localStorage.setItem('alradhy.bridge.tab',name)}catch(e){}
+  if(!wide.matches)window.scrollTo({top:0});
+}
+document.querySelectorAll('#tabbar [data-tab]').forEach(b=>b.addEventListener('click',()=>{buzz(6);showView(b.dataset.tab)}));
+if(wide.addEventListener)wide.addEventListener('change',()=>showView(wide.matches&&currentView==='remote'?'keyboard':currentView));
+let startTab='remote';try{startTab=localStorage.getItem('alradhy.bridge.tab')||'remote'}catch(e){}
+if(!document.getElementById('view-'+startTab))startTab='remote';
+showView(wide.matches&&startTab==='remote'?'keyboard':startTab);
+
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh()});
+applySettings();updateCount();
 initialStatus();setInterval(refresh,4000);
 </script></body></html>

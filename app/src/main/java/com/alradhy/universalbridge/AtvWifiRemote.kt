@@ -432,10 +432,7 @@ object AtvWifiRemote {
         }
     }
     @Synchronized fun key(name:String):String {
-        val code=mapOf("HOME" to 3,"BACK" to 4,"UP" to 19,"DOWN" to 20,
-            "LEFT" to 21,"RIGHT" to 22,"OK" to 23,"VOL_UP" to 24,"VOL_DOWN" to 25,
-            "POWER" to 26,"MENU" to 82,"PLAY_PAUSE" to 85,"MUTE" to 164,
-            "SEARCH" to 84)[name]?:throw IllegalArgumentException("Unsupported remote key")
+        val code=BridgeKeys.code(name)?:throw IllegalArgumentException("Unsupported remote key")
         connect()
         keys!!.key(code)
         return "Wi-Fi remote command sent ($name)"

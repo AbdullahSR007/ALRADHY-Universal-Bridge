@@ -80,3 +80,14 @@ The Remote v2 TLS connection after successful pairing now uses the standard Remo
 
 ### Beta1 build correction
 TV Hub manifest overrides application label in its higher-priority variant using tools:replace. Root input is an explicit opt-in near the top of the TV Hub main screen (not mandatory if the built-in Remote Service self-connection works). Native TVHub text endpoint now uses the same direct dispatcher as browsers. The TV Hub root fallback can attempt clipboard paste without changing ALRADHY-KB; some editors won't accept it.
+
+## v0.3.1 — Redesigned interface (phone · tablet · PC)
+- **New web UI** shared by the mobile app, TV Hub and every browser: tabs for Remote, Touchpad, Keyboard, Clipboard and Settings; bottom tab bar on phones, two-column layout (remote always visible) on tablets in landscape and PCs.
+- **Remote** modelled on ALRADHY ATV Mobile: round D-pad, Power (double-tap confirm), Input, Search, Settings, Back/Home/Menu, volume and channel rockers, mute, media row (prev/rewind/play/forward/next), digits 0–9, Info, Guide, CC, Stop, All apps. Hold-to-repeat for arrows/volume/seek, haptic feedback and round-trip latency in the header.
+- **Touchpad**: swipe = arrows, tap = OK, long-press = Back, two-finger tap = Home, mouse wheel = Up/Down; adjustable sensitivity.
+- **PC keyboard shortcuts**: arrows, Enter, Esc/Backspace, H, Space, +/−/M, PgUp/PgDn, S, digits, `/` opens text input.
+- **Keyboard**: character counter, paste, Ctrl+Enter send, local history of sent texts (can be turned off/cleared), unchanged Arabic live typing.
+- **Clipboard**: send received text straight to the TV; badge when new text arrives.
+- **Settings**: dark/light/auto theme, remote size, haptics, repeat, shortcuts, history, power confirmation; copy/share the gateway URL.
+- Extended key whitelist (`BridgeKeys`) shared by Remote v2, TV Hub and root fallback. Native host screen restyled with a large PIN/URL card and clear focus rings for TV D-pad.
+- Security model unchanged: LAN HTTP is still unencrypted; ALRADHY-KB is untouched.
